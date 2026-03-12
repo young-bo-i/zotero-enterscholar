@@ -19,3 +19,4 @@ pref("extensions.enterscholar.useStream", true);
 
 pref("extensions.enterscholar.enableReaderPopup", true);
 pref("extensions.enterscholar.enableContextMenu", true);
+pref("extensions.enterscholar.autoTranslate", true);

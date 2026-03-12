@@ -15,6 +15,8 @@ enterscholar-target-language = 目标语言
 enterscholar-enable-reader-popup = 在阅读器选中文本弹窗中显示翻译
 enterscholar-enable-context-menu = 在右键菜单中显示翻译选项
 
+enterscholar-auto-translate = 划词自动翻译
+
 enterscholar-show-advanced = ▶ 显示高级设置
 enterscholar-hide-advanced = ▼ 收起高级设置
 
@@ -53,3 +55,5 @@ enterscholar-section-sidenav =
     .tooltiptext = 恩特学术翻译
 enterscholar-section-copy =
     .tooltiptext = 复制译文
+enterscholar-section-translate =
+    .tooltiptext = 翻译

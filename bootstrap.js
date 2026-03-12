@@ -6,8 +6,27 @@ var _sectionState = {
 	translated: '',
 	loading: false,
 	error: '',
+	autoTriggered: false,
 };
 var _sectionRefresh = null;
+
+var LANGUAGES = [
+	{ value: 'zh-CN', label: '简体中文' },
+	{ value: 'zh-TW', label: '繁体中文' },
+	{ value: 'en', label: 'English' },
+	{ value: 'ja', label: '日本語' },
+	{ value: 'ko', label: '한국어' },
+	{ value: 'fr', label: 'Français' },
+	{ value: 'de', label: 'Deutsch' },
+	{ value: 'es', label: 'Español' },
+	{ value: 'ru', label: 'Русский' },
+	{ value: 'pt', label: 'Português' },
+	{ value: 'ar', label: 'العربية' },
+];
+
+function _getAutoTranslate() {
+	return Zotero.Prefs.get('extensions.enterscholar.autoTranslate', true);
+}
 
 function install(data, reason) {}
 
@@ -63,7 +82,8 @@ function _registerReaderPopup() {
 		let text = params.annotation?.text;
 		if (!text || !text.trim()) return;
 		
-		_updateTranslateSection(text.trim());
+		let autoTranslate = _getAutoTranslate();
+		_updateTranslateSection(text.trim(), autoTranslate);
 		
 		if (!Zotero.Prefs.get('extensions.enterscholar.enableReaderPopup', true)) {
 			return;
@@ -110,15 +130,7 @@ function _registerReaderPopup() {
 			
 			let btn = doc.createElement('button');
 			btn.textContent = '前往设置';
-			btn.style.cssText = [
-				'padding: 4px 16px',
-				'border: 1px solid var(--fill-quinary)',
-				'border-radius: 6px',
-				'background: var(--material-background, transparent)',
-				'color: var(--fill-primary)',
-				'font-size: 12px',
-				'cursor: pointer',
-			].join(';');
+			btn.style.cssText = _buttonStyle();
 			btn.addEventListener('click', () => {
 				Zotero.Utilities.Internal.openPreferences('enterscholar-preferences');
 			});
@@ -129,22 +141,47 @@ function _registerReaderPopup() {
 		}
 		
 		let content = doc.createElement('div');
-		content.textContent = '翻译中…';
-		content.style.color = 'var(--fill-secondary)';
 		container.appendChild(content);
 		wrapper.appendChild(container);
 		append(wrapper);
 		
-		Zotero.EnterScholar.Translate.translate(text, (partial, done) => {
-			content.textContent = partial || '翻译中…';
-			if (done) {
-				content.style.color = '';
-			}
-		}).catch((e) => {
-			Zotero.logError(e);
-			content.textContent = _getUserFriendlyError(e.message);
-			content.style.color = 'var(--accent-red)';
-		});
+		if (autoTranslate) {
+			content.textContent = '翻译中…';
+			content.style.color = 'var(--fill-secondary)';
+			Zotero.EnterScholar.Translate.translate(text, (partial, done) => {
+				content.textContent = partial || '翻译中…';
+				if (done) {
+					content.style.color = '';
+				}
+			}).catch((e) => {
+				Zotero.logError(e);
+				content.textContent = _getUserFriendlyError(e.message);
+				content.style.color = 'var(--accent-red)';
+			});
+		}
+		else {
+			content.textContent = text.trim();
+			content.style.cssText = 'color: var(--fill-secondary); margin-bottom: 8px;';
+			let btn = doc.createElement('button');
+			btn.textContent = '翻译';
+			btn.style.cssText = _buttonStyle();
+			btn.addEventListener('click', () => {
+				btn.remove();
+				content.textContent = '翻译中…';
+				content.style.cssText = 'color: var(--fill-secondary);';
+				Zotero.EnterScholar.Translate.translate(text, (partial, done) => {
+					content.textContent = partial || '翻译中…';
+					if (done) {
+						content.style.color = '';
+					}
+				}).catch((e) => {
+					Zotero.logError(e);
+					content.textContent = _getUserFriendlyError(e.message);
+					content.style.color = 'var(--accent-red)';
+				});
+			});
+			container.appendChild(btn);
+		}
 	}, PLUGIN_ID);
 }
 
@@ -158,7 +195,7 @@ function _registerReaderContextMenu() {
 		
 		let { reader, params, append } = event;
 		append({
-			label: '恩特学术',
+			label: '恩特学术翻译',
 			onCommand: async () => {
 				let annotations = reader._item.getAnnotations();
 				let texts = [];
@@ -278,13 +315,26 @@ function _registerTranslateSection() {
 		},
 		sectionButtons: [
 			{
+				type: 'translate',
+				icon: 'chrome://zotero/skin/16/universal/sync.svg',
+				l10nID: 'enterscholar-section-translate',
+				onClick: ({ body }) => {
+					if (!_sectionState.original) return;
+					_sectionState.translated = '';
+					_sectionState.error = '';
+					_sectionState.loading = true;
+					_sectionState.autoTriggered = true;
+					if (_sectionRefresh) _sectionRefresh();
+				},
+			},
+			{
 				type: 'copy',
 				icon: 'chrome://zotero/skin/16/universal/copy.svg',
 				l10nID: 'enterscholar-section-copy',
 				onClick: ({ body }) => {
 					let transEl = body.querySelector('#es-section-translation');
 					let text = transEl?.textContent;
-					if (text && text !== '翻译中…') {
+					if (text && text !== '翻译中…' && text !== '选中文本后点击翻译按钮') {
 						let clipboard = Cc['@mozilla.org/widget/clipboardhelper;1']
 							.getService(Ci.nsIClipboardHelper);
 						clipboard.copyString(text);
@@ -305,19 +355,22 @@ function _registerTranslateSection() {
 		onRender: ({ body, doc }) => {
 			body.textContent = '';
 			
+			let controlBar = _buildSectionControls(doc);
+			body.appendChild(controlBar);
+			
 			let state = _sectionState;
 			
 			if (!state.original) {
 				let hint = doc.createElement('div');
 				hint.textContent = '在阅读器中选中文本即可翻译';
-				hint.style.cssText = 'color: var(--fill-secondary); padding: 6px 0; font-size: 13px;';
+				hint.style.cssText = 'color: var(--fill-secondary); padding: 8px 0; font-size: 13px;';
 				body.appendChild(hint);
 				return;
 			}
 			
 			let origLabel = doc.createElement('div');
 			origLabel.textContent = '原文';
-			origLabel.style.cssText = 'font-size: 11px; color: var(--fill-secondary); margin-bottom: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;';
+			origLabel.style.cssText = 'font-size: 11px; color: var(--fill-secondary); margin-bottom: 4px; margin-top: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;';
 			body.appendChild(origLabel);
 			
 			let origBox = doc.createElement('div');
@@ -341,15 +394,19 @@ function _registerTranslateSection() {
 			else if (state.translated) {
 				transBox.textContent = state.translated;
 			}
-			else {
+			else if (state.autoTriggered) {
 				transBox.textContent = '翻译中…';
+				transBox.style.color = 'var(--fill-secondary)';
+			}
+			else {
+				transBox.textContent = '选中文本后点击翻译按钮';
 				transBox.style.color = 'var(--fill-secondary)';
 			}
 			body.appendChild(transBox);
 		},
 		onAsyncRender: async ({ body }) => {
 			let state = _sectionState;
-			if (!state.original || state.translated || state.error) return;
+			if (!state.original || state.translated || state.error || !state.autoTriggered) return;
 			
 			let transBox = body.querySelector('#es-section-translation');
 			if (!transBox) return;
@@ -391,13 +448,56 @@ function _registerTranslateSection() {
 	});
 }
 
-function _updateTranslateSection(text) {
+function _buildSectionControls(doc) {
+	let bar = doc.createElement('div');
+	bar.style.cssText = 'display: flex; align-items: center; gap: 8px; padding: 4px 0; flex-wrap: wrap;';
+	
+	let autoLabel = doc.createElement('label');
+	autoLabel.style.cssText = 'display: flex; align-items: center; gap: 4px; font-size: 12px; cursor: pointer; white-space: nowrap;';
+	let autoCheck = doc.createElement('input');
+	autoCheck.type = 'checkbox';
+	autoCheck.checked = _getAutoTranslate();
+	autoCheck.style.cssText = 'margin: 0; cursor: pointer;';
+	autoCheck.addEventListener('change', () => {
+		Zotero.Prefs.set('extensions.enterscholar.autoTranslate', autoCheck.checked, true);
+	});
+	autoLabel.appendChild(autoCheck);
+	let autoText = doc.createElement('span');
+	autoText.textContent = '自动翻译';
+	autoLabel.appendChild(autoText);
+	bar.appendChild(autoLabel);
+	
+	let spacer = doc.createElement('div');
+	spacer.style.cssText = 'flex: 1;';
+	bar.appendChild(spacer);
+	
+	let langSelect = doc.createElement('select');
+	langSelect.style.cssText = 'font-size: 12px; padding: 2px 4px; border: 1px solid var(--fill-quinary); border-radius: 4px; background: var(--material-background, transparent); color: var(--fill-primary); cursor: pointer;';
+	let currentLang = Zotero.EnterScholar.Config.getTargetLanguage();
+	for (let lang of LANGUAGES) {
+		let opt = doc.createElement('option');
+		opt.value = lang.value;
+		opt.textContent = lang.label;
+		if (lang.value === currentLang) opt.selected = true;
+		langSelect.appendChild(opt);
+	}
+	langSelect.addEventListener('change', () => {
+		Zotero.Prefs.set('extensions.enterscholar.targetLanguage', langSelect.value, true);
+		Zotero.EnterScholar.Translate.clearCache();
+	});
+	bar.appendChild(langSelect);
+	
+	return bar;
+}
+
+function _updateTranslateSection(text, autoTranslate) {
 	if (!text) return;
 	_sectionState = {
 		original: text,
 		translated: '',
-		loading: true,
+		loading: autoTranslate,
 		error: '',
+		autoTriggered: autoTranslate,
 	};
 	if (_sectionRefresh) {
 		_sectionRefresh();
@@ -405,6 +505,18 @@ function _updateTranslateSection(text) {
 }
 
 // ── Helpers ──
+
+function _buttonStyle() {
+	return [
+		'padding: 4px 16px',
+		'border: 1px solid var(--fill-quinary)',
+		'border-radius: 6px',
+		'background: var(--material-background, transparent)',
+		'color: var(--fill-primary)',
+		'font-size: 12px',
+		'cursor: pointer',
+	].join(';');
+}
 
 function _getUserFriendlyError(msg) {
 	if (!msg) return '翻译失败，请稍后重试';

@@ -15,6 +15,8 @@ enterscholar-target-language = Target Language
 enterscholar-enable-reader-popup = Show translation in reader text selection popup
 enterscholar-enable-context-menu = Show translation option in context menus
 
+enterscholar-auto-translate = Auto-translate on selection
+
 enterscholar-show-advanced = ▶ Show Advanced Settings
 enterscholar-hide-advanced = ▼ Hide Advanced Settings
 
@@ -53,3 +55,5 @@ enterscholar-section-sidenav =
     .tooltiptext = EnterScholar Translate
 enterscholar-section-copy =
     .tooltiptext = Copy Translation
+enterscholar-section-translate =
+    .tooltiptext = Translate
