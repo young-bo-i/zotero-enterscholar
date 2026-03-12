@@ -117,27 +117,39 @@ Zotero.EnterScholar.Config = {
 		
 		let apiKey = Zotero.EnterScholar.Auth.userApiKey;
 		if (!apiKey) {
-			throw new Error('未登录');
+			throw new Error('请先登录恩特学术账号');
 		}
 		
 		let url = this.getUsageURL();
 		Zotero.debug('EnterScholar: Fetching usage from ' + url);
 		
-		let response = await Zotero.HTTP.request('GET', url, {
-			headers: {
-				'Accept': 'application/json',
-				'User-Api-Key': apiKey,
-				'User-Api-Client-Id': Zotero.EnterScholar.Auth.clientId,
-			},
-			timeout: 10000,
-		});
+		let response;
+		try {
+			response = await Zotero.HTTP.request('GET', url, {
+				headers: {
+					'Accept': 'application/json',
+					'User-Api-Key': apiKey,
+					'User-Api-Client-Id': Zotero.EnterScholar.Auth.clientId,
+				},
+				timeout: 10000,
+			});
+		}
+		catch (e) {
+			Zotero.debug('EnterScholar: Usage request failed: ' + e.message);
+			if (e.status === 401 || e.status === 403) {
+				throw new Error('登录已过期，请重新登录');
+			}
+			if (e.status === 404) {
+				throw new Error('配额服务暂未开放');
+			}
+			throw new Error('无法连接服务器，请检查网络');
+		}
 		
 		Zotero.debug('EnterScholar: Usage response status: ' + response.status);
-		Zotero.debug('EnterScholar: Usage response: ' + response.responseText.substring(0, 500));
 		
 		let text = response.responseText;
 		if (!text || !text.trim()) {
-			throw new Error('响应为空 (HTTP ' + response.status + ')');
+			throw new Error('服务器返回了空内容，请稍后重试');
 		}
 		
 		let usage;
@@ -145,7 +157,8 @@ Zotero.EnterScholar.Config = {
 			usage = JSON.parse(text);
 		}
 		catch (parseErr) {
-			throw new Error('响应非JSON: ' + text.substring(0, 150));
+			Zotero.debug('EnterScholar: Usage parse error, raw: ' + text.substring(0, 200));
+			throw new Error('服务器返回了无法识别的内容，请稍后重试');
 		}
 		
 		this._cachedUsage = usage;

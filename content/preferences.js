@@ -24,7 +24,7 @@ Zotero.EnterScholar.Preferences = {
 		if (isLoggedIn) {
 			notLoggedIn.hidden = true;
 			loggedIn.hidden = false;
-			usernameLabel.value = `已登录：${username || '未知用户'}`;
+			usernameLabel.value = `已登录：${username || '用户'}`;
 		}
 		else {
 			notLoggedIn.hidden = false;
@@ -58,7 +58,9 @@ Zotero.EnterScholar.Preferences = {
 		}
 		catch (e) {
 			Zotero.logError(e);
-			Services.prompt.alert(null, '恩特学术', '登录失败: ' + e.message);
+			if (e.message !== '登录已取消') {
+				Services.prompt.alert(null, '恩特学术', e.message);
+			}
 		}
 		finally {
 			loginBtn.disabled = false;
@@ -87,25 +89,22 @@ Zotero.EnterScholar.Preferences = {
 			
 			let parts = [];
 			if (usage.daily_quota !== undefined) {
-				parts.push(`今日: ${usage.used_today || 0} / ${usage.daily_quota}`);
-				parts.push(`剩余: ${usage.remaining ?? ''}`);
+				parts.push(`今日已用 ${usage.used_today || 0} / ${usage.daily_quota}`);
+				let remaining = usage.remaining ?? (usage.daily_quota - (usage.used_today || 0));
+				parts.push(`剩余 ${remaining}`);
 			}
 			if (usage.trust_level !== undefined) {
-				parts.push(`等级: ${usage.trust_level}`);
+				parts.push(`等级 ${usage.trust_level}`);
 			}
 			if (parts.length === 0) {
-				parts.push(JSON.stringify(usage));
+				parts.push('已获取额度信息');
 			}
-			usageLabel.value = parts.join('  |  ');
+			usageLabel.value = parts.join('  ·  ');
 			usageBox.hidden = false;
 		}
 		catch (e) {
 			Zotero.logError(e);
-			let msg = e.message || String(e);
-			if (e.status) {
-				msg = `(${e.status}) ${e.responseText ? e.responseText.substring(0, 100) : msg}`;
-			}
-			usageLabel.value = '查询失败: ' + msg;
+			usageLabel.value = e.message || '暂时无法获取额度信息';
 			usageBox.hidden = false;
 		}
 		finally {

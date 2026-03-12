@@ -111,16 +111,16 @@ function _registerReaderPopup() {
 		container.appendChild(content);
 		append(container);
 		
-		Zotero.EnterScholar.Translate.translate(text, (partial, done) => {
-			content.textContent = partial || '翻译中…';
-			if (done) {
-				content.style.color = '';
-			}
-		}).catch((e) => {
-			Zotero.logError(e);
-			content.textContent = e.message;
-			content.style.color = 'var(--accent-red)';
-		});
+	Zotero.EnterScholar.Translate.translate(text, (partial, done) => {
+		content.textContent = partial || '翻译中…';
+		if (done) {
+			content.style.color = '';
+		}
+	}).catch((e) => {
+		Zotero.logError(e);
+		content.textContent = _getUserFriendlyError(e.message);
+		content.style.color = 'var(--accent-red)';
+	});
 	}, PLUGIN_ID);
 }
 
@@ -146,14 +146,14 @@ function _registerReaderContextMenu() {
 				let selectedText = texts.join('\n');
 				if (!selectedText) return;
 				
-				try {
-					let result = await Zotero.EnterScholar.Translate.translate(selectedText);
-					Services.prompt.alert(null, '恩特学术', result);
-				}
-				catch (e) {
-					Zotero.logError(e);
-					Services.prompt.alert(null, '恩特学术', '翻译失败: ' + e.message);
-				}
+			try {
+				let result = await Zotero.EnterScholar.Translate.translate(selectedText);
+				Services.prompt.alert(null, '恩特学术', result);
+			}
+			catch (e) {
+				Zotero.logError(e);
+				Services.prompt.alert(null, '恩特学术', _getUserFriendlyError(e.message));
+			}
 			}
 		});
 	}, PLUGIN_ID);
@@ -177,16 +177,18 @@ function _registerMainMenus() {
 						onShowing: (ev, ctx) => {
 							ctx.setVisible(!Zotero.EnterScholar.Auth.isLoggedIn);
 						},
-						onCommand: async () => {
-							try {
-								await Zotero.EnterScholar.Auth.login();
-								Zotero.EnterScholar.Config.clearCache();
+					onCommand: async () => {
+						try {
+							await Zotero.EnterScholar.Auth.login();
+							Zotero.EnterScholar.Config.clearCache();
+						}
+						catch (e) {
+							Zotero.logError(e);
+							if (e.message !== '登录已取消') {
+								Services.prompt.alert(null, '恩特学术', _getUserFriendlyError(e.message));
 							}
-							catch (e) {
-								Zotero.logError(e);
-								Services.prompt.alert(null, '恩特学术', '登录失败: ' + e.message);
-							}
-						},
+						}
+					},
 					},
 					{
 						menuType: 'menuitem',
@@ -207,27 +209,33 @@ function _registerMainMenus() {
 						onShowing: (ev, ctx) => {
 							ctx.setEnabled(Zotero.EnterScholar.Auth.isLoggedIn);
 						},
-						onCommand: async () => {
-							try {
-								let usage = await Zotero.EnterScholar.Config.fetchUsage(true);
-								if (usage) {
-									let msg = _formatUsageMessage(usage);
-									Services.prompt.alert(null, '恩特学术 - 配额', msg);
-								}
-								else {
-									Services.prompt.alert(null, '恩特学术', '无法获取配额信息');
-								}
+					onCommand: async () => {
+						try {
+							let usage = await Zotero.EnterScholar.Config.fetchUsage(true);
+							if (usage) {
+								let msg = _formatUsageMessage(usage);
+								Services.prompt.alert(null, '恩特学术 — 使用额度', msg);
 							}
-							catch (e) {
-								Zotero.logError(e);
-								Services.prompt.alert(null, '恩特学术', '查询失败: ' + e.message);
+							else {
+								Services.prompt.alert(null, '恩特学术', '暂时无法获取额度信息，请稍后再试');
 							}
-						},
+						}
+						catch (e) {
+							Zotero.logError(e);
+							Services.prompt.alert(null, '恩特学术', _getUserFriendlyError(e.message));
+						}
+					},
 					},
 				],
 			},
 		],
 	});
+}
+
+function _getUserFriendlyError(msg) {
+	if (!msg) return '翻译失败，请稍后重试';
+	if (msg.includes('登录授权失败')) return '登录失败，请重试';
+	return msg;
 }
 
 function _formatUsageMessage(usage) {

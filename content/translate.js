@@ -59,12 +59,12 @@ Zotero.EnterScholar.Translate = {
 	 */
 	async translate(text, onChunk) {
 		if (!text || !text.trim()) {
-			throw new Error('No text to translate');
+			throw new Error('请先选中需要翻译的文本');
 		}
 		
 		let config = Zotero.EnterScholar.Config.getActiveConfig();
 		if (!config) {
-			throw new Error('未配置翻译服务，请在设置中配置或登录恩特学术。');
+			throw new Error('尚未配置翻译服务，请前往设置登录账号或配置本地模型');
 		}
 		
 		let cacheKey = this._getCacheKey(text, config.target_language);
@@ -156,7 +156,7 @@ Zotero.EnterScholar.Translate = {
 			data = JSON.parse(responseText);
 		}
 		catch (e) {
-			throw new Error('无法解析翻译响应');
+			throw new Error('翻译服务返回了无法识别的内容，请稍后重试');
 		}
 		
 		if (data.choices && data.choices.length > 0) {
@@ -170,7 +170,7 @@ Zotero.EnterScholar.Translate = {
 			if (parts) return parts.map(p => p.text).join('');
 		}
 		
-		throw new Error('无法识别的翻译响应格式');
+		throw new Error('翻译服务返回了不支持的格式，请检查服务配置');
 	},
 	
 	_streamRequest(text, config, onChunk) {
@@ -221,37 +221,41 @@ Zotero.EnterScholar.Translate = {
 				}
 			};
 			
-			xhr.onloadend = function () {
-				if (xhr.status >= 200 && xhr.status < 300) {
-					onChunk(fullText, true);
-					resolve(fullText);
+		xhr.onloadend = function () {
+			if (xhr.status >= 200 && xhr.status < 300) {
+				onChunk(fullText, true);
+				resolve(fullText);
+			}
+			else if (xhr.status === 401 || xhr.status === 403) {
+				reject(new Error('登录已过期或权限不足，请重新登录后再试'));
+			}
+			else if (xhr.status === 404) {
+				reject(new Error('翻译服务暂不可用，请检查设置或联系管理员'));
+			}
+			else if (xhr.status === 429) {
+				reject(new Error('请求过于频繁，请稍后再试'));
+			}
+			else if (xhr.status >= 500) {
+				reject(new Error('翻译服务暂时出现问题，请稍后重试'));
+			}
+			else {
+				let errorMsg = '';
+				try {
+					let errData = JSON.parse(xhr.responseText);
+					errorMsg = errData.error || errData.message || '';
 				}
-				else if (xhr.status === 403) {
-					reject(new Error('权限不足（403）。如使用论坛翻译，请确认论坛已部署 bridge 插件并重新登录。'));
-				}
-				else if (xhr.status === 404) {
-					reject(new Error('翻译端点不存在（404）。请检查论坛是否已部署 bridge 插件，或切换到本地大模型配置。'));
-				}
-				else {
-					let errorMsg = '翻译请求失败';
-					try {
-						let errData = JSON.parse(xhr.responseText);
-						errorMsg = errData.error || errData.message || errorMsg;
-					}
-					catch (_) {
-						if (xhr.responseText) errorMsg += ': ' + xhr.responseText.substring(0, 200);
-					}
-					reject(new Error(`(${xhr.status}) ${errorMsg}`));
-				}
-			};
-			
-			xhr.onerror = function () {
-				reject(new Error('网络错误，无法连接翻译服务'));
-			};
-			
-			xhr.ontimeout = function () {
-				reject(new Error('翻译请求超时'));
-			};
+				catch (_) {}
+				reject(new Error(errorMsg || '翻译失败，请稍后重试'));
+			}
+		};
+		
+		xhr.onerror = function () {
+			reject(new Error('无法连接翻译服务，请检查网络连接'));
+		};
+		
+		xhr.ontimeout = function () {
+			reject(new Error('翻译服务响应超时，请稍后重试'));
+		};
 			
 			xhr.timeout = 120000;
 			xhr.send(JSON.stringify(body));
@@ -259,24 +263,28 @@ Zotero.EnterScholar.Translate = {
 	},
 	
 	_handleHTTPError(e) {
-		if (e.status === 403) {
-			throw new Error('权限不足（403）。如使用论坛翻译，请确认论坛已部署 bridge 插件并重新登录。');
+		if (e.status === 401 || e.status === 403) {
+			throw new Error('登录已过期或权限不足，请重新登录后再试');
 		}
 		if (e.status === 404) {
-			throw new Error('翻译端点不存在（404）。请检查论坛是否已部署 bridge 插件，或切换到本地大模型配置。');
+			throw new Error('翻译服务暂不可用，请检查设置或联系管理员');
+		}
+		if (e.status === 429) {
+			throw new Error('请求过于频繁，请稍后再试');
+		}
+		if (e.status >= 500) {
+			throw new Error('翻译服务暂时出现问题，请稍后重试');
 		}
 		if (e.status) {
 			let errorMsg = '';
 			try {
 				let errBody = JSON.parse(e.responseText);
-				errorMsg = errBody.error || errBody.message || e.responseText;
+				errorMsg = errBody.error || errBody.message || '';
 			}
-			catch (_) {
-				errorMsg = e.responseText || e.message;
-			}
-			throw new Error(`(${e.status}) ${errorMsg}`);
+			catch (_) {}
+			throw new Error(errorMsg || '翻译失败，请稍后重试');
 		}
-		throw new Error('网络错误: ' + e.message);
+		throw new Error('无法连接翻译服务，请检查网络连接');
 	},
 	
 	clearCache() {

@@ -99,7 +99,7 @@ Zotero.EnterScholar.Auth = {
 	
 	async decryptPayload(encryptedBase64) {
 		if (!this._privateKeyObj) {
-			throw new Error('No private key available for decryption');
+			throw new Error('登录会话已失效，请重新发起登录');
 		}
 		
 		let binary = this._base64Decode(encryptedBase64);
@@ -197,32 +197,32 @@ Zotero.EnterScholar.Auth = {
 				let url = new URL(redirectURL);
 				let payload = url.searchParams.get('payload');
 				
-				if (payload) {
-					self._handleAuthPayload(payload)
-						.then((result) => {
-							cleanup();
-							win.close();
-							resolve(result);
-						})
-						.catch((e) => {
-							cleanup();
-							win.close();
-							reject(e);
-						});
-				}
-				else {
-					cleanup();
-					win.close();
-					reject(new Error('No payload in auth redirect'));
-				}
+			if (payload) {
+				self._handleAuthPayload(payload)
+					.then((result) => {
+						cleanup();
+						win.close();
+						resolve(result);
+					})
+					.catch((e) => {
+						cleanup();
+						win.close();
+						reject(e);
+					});
+			}
+			else {
+				cleanup();
+				win.close();
+				reject(new Error('未收到授权信息，请重新登录'));
+			}
 			};
 			
 			win.addEventListener('load', () => {
-				let browser = win.document.querySelector('browser');
-				if (!browser) {
-					reject(new Error('Could not find browser element'));
-					return;
-				}
+			let browser = win.document.querySelector('browser');
+			if (!browser) {
+				reject(new Error('无法打开登录窗口，请重启 Zotero 后重试'));
+				return;
+			}
 				
 				browser.addEventListener('pagetitlechanged', () => {
 					let redirectURL = tryExtractPayload(browser);
@@ -239,13 +239,13 @@ Zotero.EnterScholar.Auth = {
 					}
 				}, 300);
 				
-				win.addEventListener('unload', () => {
-					clearInterval(checkInterval);
-					if (!handled) {
-						cleanup();
-						reject(new Error('Auth window closed by user'));
-					}
-				});
+			win.addEventListener('unload', () => {
+				clearInterval(checkInterval);
+				if (!handled) {
+					cleanup();
+					reject(new Error('登录已取消'));
+				}
+			});
 			});
 		});
 	},
@@ -258,12 +258,12 @@ Zotero.EnterScholar.Auth = {
 			Zotero.debug('EnterScholar: Auth payload decrypted successfully');
 			
 			if (this._lastNonce && data.nonce !== this._lastNonce) {
-				throw new Error('Nonce mismatch -- possible replay attack');
+				throw new Error('安全验证失败，请重新登录');
 			}
 			
 			let apiKey = data.key;
 			if (!apiKey) {
-				throw new Error('No API key in auth response');
+				throw new Error('授权信息不完整，请重新登录');
 			}
 			
 			Zotero.Prefs.set('extensions.enterscholar.userApiKey', apiKey, true);
@@ -274,7 +274,7 @@ Zotero.EnterScholar.Auth = {
 		}
 		catch (e) {
 			Zotero.logError(e);
-			throw new Error('Failed to process auth payload: ' + e.message);
+			throw new Error('登录授权失败，请重试：' + e.message);
 		}
 	},
 	
