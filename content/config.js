@@ -125,6 +125,7 @@ Zotero.EnterScholar.Config = {
 		
 		let response = await Zotero.HTTP.request('GET', url, {
 			headers: {
+				'Accept': 'application/json',
 				'User-Api-Key': apiKey,
 				'User-Api-Client-Id': Zotero.EnterScholar.Auth.clientId,
 			},

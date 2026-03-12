@@ -282,6 +282,7 @@ Zotero.EnterScholar.Auth = {
 		try {
 			let response = await Zotero.HTTP.request('GET', this.forumURL + '/session/current.json', {
 				headers: {
+					'Accept': 'application/json',
 					'User-Api-Key': apiKey,
 					'User-Api-Client-Id': this.clientId,
 				},
@@ -304,6 +305,7 @@ Zotero.EnterScholar.Auth = {
 			let usageURL = Zotero.EnterScholar.Config.getUsageURL();
 			let response = await Zotero.HTTP.request('GET', usageURL, {
 				headers: {
+					'Accept': 'application/json',
 					'User-Api-Key': apiKey,
 					'User-Api-Client-Id': this.clientId,
 				},
