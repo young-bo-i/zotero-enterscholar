@@ -62,10 +62,9 @@ function _registerReaderPopup() {
 			'border-top: 1px solid var(--fill-quinary)',
 			'font-size: 13px',
 			'line-height: 1.6',
-			'min-width: 360px',
-			'max-width: 560px',
 			'white-space: pre-wrap',
 			'word-break: break-word',
+			'overflow-wrap: break-word',
 		].join(';');
 		
 		let header = doc.createElement('div');
