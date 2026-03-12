@@ -1,0 +1,178 @@
+<vbox id="enterscholar-prefpane"
+	onload="Zotero.EnterScholar.Preferences.init()"
+>
+	<vbox class="main-section">
+		<!-- Account Section -->
+		<groupbox>
+			<label><html:h2 data-l10n-id="enterscholar-account-section"/></label>
+			
+			<vbox id="enterscholar-not-logged-in">
+				<hbox align="center">
+					<label data-l10n-id="enterscholar-not-logged-in"/>
+					<spacer flex="1"/>
+					<button id="enterscholar-login-btn"
+						data-l10n-id="enterscholar-login-button"
+						oncommand="Zotero.EnterScholar.Preferences.login()"/>
+				</hbox>
+			</vbox>
+			
+			<vbox id="enterscholar-logged-in" hidden="true">
+				<hbox align="center">
+					<label id="enterscholar-username-label"/>
+					<spacer flex="1"/>
+					<button id="enterscholar-check-usage-btn"
+						data-l10n-id="enterscholar-check-usage"
+						oncommand="Zotero.EnterScholar.Preferences.checkUsage()"/>
+					<button id="enterscholar-logout-btn"
+						data-l10n-id="enterscholar-logout-button"
+						oncommand="Zotero.EnterScholar.Preferences.logout()"/>
+				</hbox>
+				<vbox id="enterscholar-usage-box" hidden="true">
+					<label id="enterscholar-usage-label" style="margin-top: 6px; color: var(--fill-secondary);"/>
+				</vbox>
+			</vbox>
+		</groupbox>
+		
+		<!-- Basic Translation Settings -->
+		<groupbox>
+			<label><html:h2 data-l10n-id="enterscholar-translate-section"/></label>
+			
+			<hbox align="center">
+				<label data-l10n-id="enterscholar-target-language" control="enterscholar-target-language"/>
+				<menulist id="enterscholar-target-language"
+					preference="extensions.enterscholar.targetLanguage"
+					native="true">
+					<menupopup>
+						<menuitem label="中文（简体）" value="zh-CN"/>
+						<menuitem label="中文（繁体）" value="zh-TW"/>
+						<menuitem label="English" value="en"/>
+						<menuitem label="日本語" value="ja"/>
+						<menuitem label="한국어" value="ko"/>
+						<menuitem label="Français" value="fr"/>
+						<menuitem label="Deutsch" value="de"/>
+						<menuitem label="Español" value="es"/>
+						<menuitem label="Русский" value="ru"/>
+						<menuitem label="Português" value="pt"/>
+						<menuitem label="العربية" value="ar"/>
+					</menupopup>
+				</menulist>
+			</hbox>
+			
+			<checkbox id="enterscholar-enable-reader-popup"
+				data-l10n-id="enterscholar-enable-reader-popup"
+				preference="extensions.enterscholar.enableReaderPopup"/>
+			
+			<checkbox id="enterscholar-enable-context-menu"
+				data-l10n-id="enterscholar-enable-context-menu"
+				preference="extensions.enterscholar.enableContextMenu"/>
+		</groupbox>
+		
+		<!-- Advanced Toggle -->
+		<html:div style="margin: 4px 0 8px;">
+			<html:a id="enterscholar-advanced-toggle"
+				href="#"
+				style="font-size: 13px; color: var(--fill-secondary); cursor: pointer; text-decoration: none; user-select: none;"
+				onclick="Zotero.EnterScholar.Preferences.toggleAdvanced(); return false;"
+				data-l10n-id="enterscholar-show-advanced"/>
+		</html:div>
+		
+		<!-- Advanced Settings (hidden by default) -->
+		<vbox id="enterscholar-advanced-section" hidden="true">
+			<!-- Forum URL -->
+			<groupbox>
+				<label><html:h2 data-l10n-id="enterscholar-connection-section"/></label>
+				
+				<hbox align="center">
+					<label data-l10n-id="enterscholar-forum-url" control="enterscholar-forum-url"/>
+					<html:input id="enterscholar-forum-url"
+						type="text"
+						preference="extensions.enterscholar.forumURL"
+						style="flex: 1;"
+						placeholder="http://localhost"/>
+				</hbox>
+			</groupbox>
+			
+			<!-- Config Source Section -->
+			<groupbox>
+				<label><html:h2 data-l10n-id="enterscholar-config-section"/></label>
+				
+				<hbox align="center">
+					<label data-l10n-id="enterscholar-config-source" control="enterscholar-config-source"/>
+					<menulist id="enterscholar-config-source"
+						preference="extensions.enterscholar.configSource"
+						native="true"
+						oncommand="Zotero.EnterScholar.Preferences.onConfigSourceChange()">
+						<menupopup>
+							<menuitem data-l10n-id="enterscholar-config-source-forum-first" value="forum_first"/>
+							<menuitem data-l10n-id="enterscholar-config-source-local" value="local"/>
+							<menuitem data-l10n-id="enterscholar-config-source-forum" value="forum"/>
+						</menupopup>
+					</menulist>
+				</hbox>
+			</groupbox>
+			
+			<!-- Local LLM Config Section -->
+			<groupbox id="enterscholar-local-config-group">
+				<label><html:h2 data-l10n-id="enterscholar-local-config-section"/></label>
+				
+				<html:div class="form-grid">
+					<label data-l10n-id="enterscholar-provider" control="enterscholar-provider"/>
+					<menulist id="enterscholar-provider"
+						preference="extensions.enterscholar.local.provider"
+						native="true">
+						<menupopup>
+							<menuitem label="OpenAI" value="openai"/>
+							<menuitem label="Azure OpenAI" value="azure"/>
+							<menuitem label="Anthropic" value="anthropic"/>
+							<menuitem label="Google Gemini" value="gemini"/>
+							<menuitem label="DeepSeek" value="deepseek"/>
+							<menuitem label="其他（OpenAI 兼容）" value="other"/>
+						</menupopup>
+					</menulist>
+					
+					<label data-l10n-id="enterscholar-endpoint" control="enterscholar-endpoint"/>
+					<html:input id="enterscholar-endpoint"
+						type="text"
+						preference="extensions.enterscholar.local.endpoint"
+						placeholder="https://api.openai.com/v1/chat/completions"/>
+					
+					<label data-l10n-id="enterscholar-api-key" control="enterscholar-api-key"/>
+					<html:input id="enterscholar-api-key"
+						type="password"
+						preference="extensions.enterscholar.local.apiKey"/>
+					
+					<label data-l10n-id="enterscholar-model" control="enterscholar-model"/>
+					<html:input id="enterscholar-model"
+						type="text"
+						preference="extensions.enterscholar.local.model"
+						placeholder="gpt-4o-mini"/>
+				</html:div>
+			</groupbox>
+			
+			<!-- Advanced Translation Settings -->
+			<groupbox>
+				<label><html:h2 data-l10n-id="enterscholar-advanced-translate-section"/></label>
+				
+				<checkbox id="enterscholar-use-stream"
+					data-l10n-id="enterscholar-use-stream"
+					preference="extensions.enterscholar.useStream"/>
+				
+				<html:div class="form-grid" style="margin-top: 8px;">
+					<label data-l10n-id="enterscholar-max-tokens" control="enterscholar-max-tokens"/>
+					<html:input id="enterscholar-max-tokens"
+						type="number"
+						preference="extensions.enterscholar.maxTokens"
+						min="100"
+						max="8000"
+						step="100"/>
+					
+					<label data-l10n-id="enterscholar-system-prompt" control="enterscholar-system-prompt"/>
+					<html:textarea id="enterscholar-system-prompt"
+						preference="extensions.enterscholar.systemPrompt"
+						placeholder="留空使用默认提示词"
+						rows="3"/>
+				</html:div>
+			</groupbox>
+		</vbox>
+	</vbox>
+</vbox>

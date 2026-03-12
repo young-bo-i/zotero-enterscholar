@@ -1,0 +1,78 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Set version in manifest.json
+        run: |
+          jq --arg ver "${{ steps.version.outputs.VERSION }}" \
+            '.version = $ver' manifest.json > manifest.tmp && mv manifest.tmp manifest.json
+
+      - name: Build XPI
+        run: bash build.sh
+
+      - name: Generate update.json
+        run: |
+          PLUGIN_ID=$(jq -r '.applications.zotero.id' manifest.json)
+          VERSION=${{ steps.version.outputs.VERSION }}
+          REPO=${{ github.repository }}
+          TAG=${{ github.ref_name }}
+
+          cat > update.json << EOF
+          {
+            "addons": {
+              "${PLUGIN_ID}": {
+                "updates": [
+                  {
+                    "version": "${VERSION}",
+                    "update_link": "https://github.com/${REPO}/releases/download/${TAG}/enterscholar-translator.xpi",
+                    "applications": {
+                      "zotero": {
+                        "strict_min_version": "6.999"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+          EOF
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: v${{ steps.version.outputs.VERSION }}
+          generate_release_notes: true
+          files: |
+            enterscholar-translator.xpi
+            update.json
+
+      - name: Update 'release' tag for stable update_url
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -f release
+          git push -f origin release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload update.json to release tag
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: release
+          files: update.json

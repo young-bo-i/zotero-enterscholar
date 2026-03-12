@@ -1,0 +1,38 @@
+#enterscholar-prefpane .form-grid {
+	display: grid;
+	grid-template-columns: auto 1fr;
+	gap: 8px 12px;
+	align-items: center;
+}
+
+#enterscholar-prefpane .form-grid label {
+	text-align: end;
+}
+
+#enterscholar-prefpane .form-grid input[type="text"],
+#enterscholar-prefpane .form-grid input[type="password"],
+#enterscholar-prefpane .form-grid input[type="number"] {
+	width: 100%;
+	box-sizing: border-box;
+}
+
+#enterscholar-prefpane textarea {
+	width: 100%;
+	box-sizing: border-box;
+	resize: vertical;
+	font-family: inherit;
+	font-size: inherit;
+}
+
+#enterscholar-prefpane groupbox {
+	margin-bottom: 12px;
+}
+
+#enterscholar-username-label {
+	font-weight: bold;
+}
+
+#enterscholar-login-btn,
+#enterscholar-logout-btn {
+	min-width: 120px;
+}

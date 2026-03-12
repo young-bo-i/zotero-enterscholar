@@ -1,0 +1,18 @@
+{
+	"manifest_version": 2,
+	"name": "恩特学术翻译",
+	"version": "0.1.0",
+	"description": "在 Zotero 中使用大模型翻译选中的文本，由恩特学术提供支持。",
+	"author": "EnterScholar",
+	"icons": {
+		"48": "content/icons/icon-48.png",
+		"96": "content/icons/icon-96.png"
+	},
+	"applications": {
+		"zotero": {
+			"id": "enterscholar-translator@enterscholar.com",
+			"update_url": "https://github.com/young-bo-i/zotero-enterscholar/releases/download/release/update.json",
+			"strict_max_version": "8.999"
+		}
+	}
+}
