@@ -3,8 +3,8 @@
     "enterscholar-translator@enterscholar.com": {
       "updates": [
         {
-          "version": "0.5.1",
-          "update_link": "https://github.com/young-bo-i/zotero-enterscholar/releases/download/v0.5.1/enterscholar-translator.xpi",
+          "version": "0.5.2",
+          "update_link": "https://github.com/young-bo-i/zotero-enterscholar/releases/download/v0.5.2/enterscholar-translator.xpi",
           "applications": {
             "zotero": {
               "strict_min_version": "6.999"
