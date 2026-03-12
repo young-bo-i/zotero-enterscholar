@@ -1,4 +1,4 @@
-enterscholar-prefpane-title = 恩特学术翻译
+enterscholar-prefpane-title = 恩特学术
 
 enterscholar-account-section = 账号
 enterscholar-login-button =
@@ -44,6 +44,6 @@ enterscholar-translating = 翻译中…
 enterscholar-translate-error = 翻译失败：{ $error }
 enterscholar-translate-no-config = 未配置翻译服务，请在设置中配置。
 enterscholar-translate-menu-label =
-    .label = 恩特学术翻译
+    .label = 恩特学术
 
 enterscholar-auth-window-title = 恩特学术登录

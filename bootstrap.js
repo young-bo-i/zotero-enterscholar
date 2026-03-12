@@ -77,7 +77,7 @@ function _registerReaderPopup() {
 			'text-transform: uppercase',
 			'letter-spacing: 0.5px',
 		].join(';');
-		header.textContent = '恩特学术翻译';
+		header.textContent = '恩特学术';
 		container.appendChild(header);
 		
 		let content = doc.createElement('div');
@@ -107,7 +107,7 @@ function _registerReaderContextMenu() {
 		
 		let { reader, params, append } = event;
 		append({
-			label: '恩特学术翻译',
+			label: '恩特学术',
 			onCommand: async () => {
 				let annotations = reader._item.getAnnotations();
 				let texts = [];
@@ -123,11 +123,11 @@ function _registerReaderContextMenu() {
 				
 				try {
 					let result = await Zotero.EnterScholar.Translate.translate(selectedText);
-					Services.prompt.alert(null, '恩特学术翻译', result);
+					Services.prompt.alert(null, '恩特学术', result);
 				}
 				catch (e) {
 					Zotero.logError(e);
-					Services.prompt.alert(null, '恩特学术翻译', '翻译失败: ' + e.message);
+					Services.prompt.alert(null, '恩特学术', '翻译失败: ' + e.message);
 				}
 			}
 		});

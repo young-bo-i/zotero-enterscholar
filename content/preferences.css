@@ -1,12 +1,37 @@
+#enterscholar-prefpane {
+	max-width: 640px;
+}
+
+#enterscholar-prefpane groupbox {
+	padding: 12px 16px;
+	margin: 0 0 16px;
+	border: 1px solid var(--fill-quinary, rgba(0,0,0,.06));
+	border-radius: 8px;
+	background: var(--material-background, transparent);
+}
+
+#enterscholar-prefpane groupbox > label:first-child {
+	margin: 0 0 8px;
+}
+
+#enterscholar-prefpane h2 {
+	font-size: 14px;
+	font-weight: 600;
+	margin: 0;
+	padding: 0;
+}
+
 #enterscholar-prefpane .form-grid {
 	display: grid;
 	grid-template-columns: auto 1fr;
-	gap: 8px 12px;
+	gap: 10px 14px;
 	align-items: center;
 }
 
 #enterscholar-prefpane .form-grid label {
 	text-align: end;
+	font-size: 13px;
+	color: var(--fill-secondary);
 }
 
 #enterscholar-prefpane .form-grid input[type="text"],
@@ -14,6 +39,17 @@
 #enterscholar-prefpane .form-grid input[type="number"] {
 	width: 100%;
 	box-sizing: border-box;
+	padding: 5px 8px;
+	border: 1px solid var(--fill-quinary, rgba(0,0,0,.12));
+	border-radius: 6px;
+	font-size: 13px;
+	background: var(--material-background50, transparent);
+}
+
+#enterscholar-prefpane .form-grid input:focus {
+	outline: none;
+	border-color: var(--accent-blue, #0969da);
+	box-shadow: 0 0 0 2px rgba(9, 105, 218, 0.15);
 }
 
 #enterscholar-prefpane textarea {
@@ -21,18 +57,56 @@
 	box-sizing: border-box;
 	resize: vertical;
 	font-family: inherit;
-	font-size: inherit;
+	font-size: 13px;
+	padding: 6px 8px;
+	border: 1px solid var(--fill-quinary, rgba(0,0,0,.12));
+	border-radius: 6px;
+	background: var(--material-background50, transparent);
 }
 
-#enterscholar-prefpane groupbox {
-	margin-bottom: 12px;
+#enterscholar-prefpane textarea:focus {
+	outline: none;
+	border-color: var(--accent-blue, #0969da);
+	box-shadow: 0 0 0 2px rgba(9, 105, 218, 0.15);
+}
+
+#enterscholar-prefpane checkbox {
+	margin: 4px 0;
 }
 
 #enterscholar-username-label {
-	font-weight: bold;
+	font-weight: 600;
+	font-size: 14px;
+}
+
+#enterscholar-usage-label {
+	font-size: 13px;
+	color: var(--fill-secondary);
+	margin-top: 6px;
 }
 
 #enterscholar-login-btn,
-#enterscholar-logout-btn {
-	min-width: 120px;
+#enterscholar-logout-btn,
+#enterscholar-check-usage-btn {
+	min-width: 100px;
+}
+
+#enterscholar-advanced-toggle {
+	display: inline-block;
+	font-size: 13px;
+	color: var(--fill-secondary);
+	cursor: pointer;
+	text-decoration: none;
+	user-select: none;
+	padding: 4px 0;
+	transition: color 0.15s;
+}
+
+#enterscholar-advanced-toggle:hover {
+	color: var(--fill-primary);
+}
+
+#enterscholar-not-logged-in label,
+#enterscholar-logged-in hbox {
+	padding: 2px 0;
 }

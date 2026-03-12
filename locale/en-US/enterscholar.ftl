@@ -1,4 +1,4 @@
-enterscholar-prefpane-title = EnterScholar Translator
+enterscholar-prefpane-title = EnterScholar
 
 enterscholar-account-section = Account
 enterscholar-login-button =
@@ -44,6 +44,6 @@ enterscholar-translating = Translating…
 enterscholar-translate-error = Translation failed: { $error }
 enterscholar-translate-no-config = No translation service configured. Please configure in Settings.
 enterscholar-translate-menu-label =
-    .label = EnterScholar Translate
+    .label = EnterScholar
 
 enterscholar-auth-window-title = EnterScholar Login

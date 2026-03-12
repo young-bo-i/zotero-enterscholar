@@ -28,17 +28,18 @@
 						oncommand="Zotero.EnterScholar.Preferences.logout()"/>
 				</hbox>
 				<vbox id="enterscholar-usage-box" hidden="true">
-					<label id="enterscholar-usage-label" style="margin-top: 6px; color: var(--fill-secondary);"/>
+					<label id="enterscholar-usage-label"/>
 				</vbox>
 			</vbox>
 		</groupbox>
 		
-		<!-- Basic Translation Settings -->
+		<!-- Translation Settings -->
 		<groupbox>
 			<label><html:h2 data-l10n-id="enterscholar-translate-section"/></label>
 			
-			<hbox align="center">
-				<label data-l10n-id="enterscholar-target-language" control="enterscholar-target-language"/>
+			<hbox align="center" style="margin-bottom: 8px;">
+				<label data-l10n-id="enterscholar-target-language" control="enterscholar-target-language"
+					style="margin-inline-end: 8px;"/>
 				<menulist id="enterscholar-target-language"
 					preference="extensions.enterscholar.targetLanguage"
 					native="true">
@@ -68,10 +69,9 @@
 		</groupbox>
 		
 		<!-- Advanced Toggle -->
-		<html:div style="margin: 4px 0 8px;">
+		<html:div style="margin: 0 0 12px;">
 			<html:a id="enterscholar-advanced-toggle"
 				href="#"
-				style="font-size: 13px; color: var(--fill-secondary); cursor: pointer; text-decoration: none; user-select: none;"
 				onclick="Zotero.EnterScholar.Preferences.toggleAdvanced(); return false;"
 				data-l10n-id="enterscholar-show-advanced"/>
 		</html:div>
@@ -83,7 +83,8 @@
 				<label><html:h2 data-l10n-id="enterscholar-connection-section"/></label>
 				
 				<hbox align="center">
-					<label data-l10n-id="enterscholar-forum-url" control="enterscholar-forum-url"/>
+					<label data-l10n-id="enterscholar-forum-url" control="enterscholar-forum-url"
+						style="margin-inline-end: 8px;"/>
 					<html:input id="enterscholar-forum-url"
 						type="text"
 						preference="extensions.enterscholar.forumURL"
@@ -92,12 +93,13 @@
 				</hbox>
 			</groupbox>
 			
-			<!-- Config Source Section -->
+			<!-- Config Source -->
 			<groupbox>
 				<label><html:h2 data-l10n-id="enterscholar-config-section"/></label>
 				
 				<hbox align="center">
-					<label data-l10n-id="enterscholar-config-source" control="enterscholar-config-source"/>
+					<label data-l10n-id="enterscholar-config-source" control="enterscholar-config-source"
+						style="margin-inline-end: 8px;"/>
 					<menulist id="enterscholar-config-source"
 						preference="extensions.enterscholar.configSource"
 						native="true"
@@ -111,7 +113,7 @@
 				</hbox>
 			</groupbox>
 			
-			<!-- Local LLM Config Section -->
+			<!-- Local LLM Config -->
 			<groupbox id="enterscholar-local-config-group">
 				<label><html:h2 data-l10n-id="enterscholar-local-config-section"/></label>
 				

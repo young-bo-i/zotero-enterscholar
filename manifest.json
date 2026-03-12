@@ -1,6 +1,6 @@
 {
 	"manifest_version": 2,
-	"name": "恩特学术翻译",
+	"name": "恩特学术",
 	"version": "0.1.0",
 	"description": "在 Zotero 中使用大模型翻译选中的文本，由恩特学术提供支持。",
 	"author": "EnterScholar",
