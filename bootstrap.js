@@ -58,12 +58,12 @@ function _registerReaderPopup() {
 		
 		let container = doc.createElement('div');
 		container.style.cssText = [
-			'padding: 8px 12px',
+			'padding: 10px 14px',
 			'border-top: 1px solid var(--fill-quinary)',
 			'font-size: 13px',
 			'line-height: 1.6',
-			'max-width: 480px',
-			'min-width: 200px',
+			'min-width: 360px',
+			'max-width: 560px',
 			'white-space: pre-wrap',
 			'word-break: break-word',
 		].join(';');
@@ -71,7 +71,7 @@ function _registerReaderPopup() {
 		let header = doc.createElement('div');
 		header.style.cssText = [
 			'font-weight: 600',
-			'margin-bottom: 4px',
+			'margin-bottom: 6px',
 			'color: var(--fill-secondary)',
 			'font-size: 11px',
 			'text-transform: uppercase',
@@ -79,6 +79,32 @@ function _registerReaderPopup() {
 		].join(';');
 		header.textContent = '恩特学术';
 		container.appendChild(header);
+		
+		let config = Zotero.EnterScholar.Config.getActiveConfig();
+		if (!config) {
+			let tip = doc.createElement('div');
+			tip.textContent = '未配置翻译服务';
+			tip.style.cssText = 'color: var(--fill-secondary); margin-bottom: 8px;';
+			container.appendChild(tip);
+			
+			let btn = doc.createElement('button');
+			btn.textContent = '前往设置';
+			btn.style.cssText = [
+				'padding: 4px 16px',
+				'border: 1px solid var(--fill-quinary)',
+				'border-radius: 6px',
+				'background: var(--material-background, transparent)',
+				'color: var(--fill-primary)',
+				'font-size: 12px',
+				'cursor: pointer',
+			].join(';');
+			btn.addEventListener('click', () => {
+				Zotero.getMainWindow().openPreferences('enterscholar-preferences');
+			});
+			container.appendChild(btn);
+			append(container);
+			return;
+		}
 		
 		let content = doc.createElement('div');
 		content.textContent = '翻译中…';
