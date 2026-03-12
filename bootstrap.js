@@ -69,28 +69,37 @@ function _registerReaderPopup() {
 			return;
 		}
 		
-		let container = doc.createElement('div');
-		container.style.cssText = [
-			'padding: 10px 14px',
-			'border-top: 1px solid var(--fill-quinary)',
-			'font-size: 13px',
-			'line-height: 1.6',
-			'white-space: pre-wrap',
-			'word-break: break-word',
-			'overflow-wrap: break-word',
-		].join(';');
+		let wrapper = doc.createElement('div');
+		wrapper.style.cssText = 'border-top: 1px solid var(--fill-quinary);';
 		
 		let header = doc.createElement('div');
 		header.style.cssText = [
+			'padding: 8px 14px 0',
 			'font-weight: 600',
-			'margin-bottom: 6px',
 			'color: var(--fill-secondary)',
 			'font-size: 11px',
 			'text-transform: uppercase',
 			'letter-spacing: 0.5px',
 		].join(';');
 		header.textContent = '恩特学术';
-		container.appendChild(header);
+		wrapper.appendChild(header);
+		
+		let container = doc.createElement('div');
+		container.style.cssText = [
+			'padding: 6px 14px 10px',
+			'font-size: 13px',
+			'line-height: 1.6',
+			'white-space: pre-wrap',
+			'word-break: break-word',
+			'overflow-wrap: break-word',
+			'overflow: auto',
+			'resize: both',
+			'min-height: 60px',
+			'height: 120px',
+			'min-width: 200px',
+			'max-height: 600px',
+			'user-select: text',
+		].join(';');
 		
 		let config = Zotero.EnterScholar.Config.getActiveConfig();
 		if (!config) {
@@ -114,7 +123,8 @@ function _registerReaderPopup() {
 				Zotero.Utilities.Internal.openPreferences('enterscholar-preferences');
 			});
 			container.appendChild(btn);
-			append(container);
+			wrapper.appendChild(container);
+			append(wrapper);
 			return;
 		}
 		
@@ -122,9 +132,8 @@ function _registerReaderPopup() {
 		content.textContent = '翻译中…';
 		content.style.color = 'var(--fill-secondary)';
 		container.appendChild(content);
-		append(container);
-		
-		_tryExpandPopup(container);
+		wrapper.appendChild(container);
+		append(wrapper);
 		
 		Zotero.EnterScholar.Translate.translate(text, (partial, done) => {
 			content.textContent = partial || '翻译中…';
@@ -396,32 +405,6 @@ function _updateTranslateSection(text) {
 }
 
 // ── Helpers ──
-
-function _tryExpandPopup(container) {
-	try {
-		let popup = container.parentElement;
-		if (!popup) return;
-		let walk = popup;
-		for (let i = 0; i < 5 && walk; i++) {
-			let style = walk.style;
-			if (style) {
-				let computed = walk.ownerDocument.defaultView.getComputedStyle(walk);
-				let currentWidth = parseInt(computed.width) || 0;
-				let currentMaxWidth = parseInt(computed.maxWidth) || 0;
-				if (currentWidth > 0 && currentWidth < 420) {
-					style.width = '420px';
-				}
-				if (currentMaxWidth > 0 && currentMaxWidth < 420) {
-					style.maxWidth = '420px';
-				}
-			}
-			walk = walk.parentElement;
-		}
-	}
-	catch (e) {
-		Zotero.debug('EnterScholar: Could not expand popup: ' + e.message);
-	}
-}
 
 function _getUserFriendlyError(msg) {
 	if (!msg) return '翻译失败，请稍后重试';
