@@ -76,6 +76,18 @@ function onMainWindowUnload({ window }) {}
 
 // ── Reader popup ──
 
+function _widenSelectionPopup(wrapper) {
+	try {
+		let popup = wrapper.closest('.selection-popup');
+		if (popup) {
+			popup.style.maxWidth = 'min(90vw, 420px)';
+		}
+	}
+	catch (e) {
+		// reader DOM structure may change across versions
+	}
+}
+
 function _registerReaderPopup() {
 	Zotero.Reader.registerEventListener('renderTextSelectionPopup', (event) => {
 		let { reader, doc, params, append } = event;
@@ -112,12 +124,8 @@ function _registerReaderPopup() {
 			'white-space: pre-wrap',
 			'word-break: break-word',
 			'overflow-wrap: break-word',
-			'overflow: auto',
-			'resize: both',
-			'min-height: 60px',
-			'height: 120px',
-			'min-width: 200px',
-			'max-height: 600px',
+			'max-height: 300px',
+			'overflow-y: auto',
 			'user-select: text',
 		].join(';');
 		
@@ -134,16 +142,18 @@ function _registerReaderPopup() {
 			btn.addEventListener('click', () => {
 				Zotero.Utilities.Internal.openPreferences('enterscholar-preferences');
 			});
-			container.appendChild(btn);
-			wrapper.appendChild(container);
-			append(wrapper);
-			return;
+		container.appendChild(btn);
+		wrapper.appendChild(container);
+		append(wrapper);
+		_widenSelectionPopup(wrapper);
+		return;
 		}
 		
 		let content = doc.createElement('div');
 		container.appendChild(content);
 		wrapper.appendChild(container);
 		append(wrapper);
+		_widenSelectionPopup(wrapper);
 		
 		if (autoTranslate) {
 			content.textContent = '翻译中…';
@@ -354,8 +364,10 @@ function _registerTranslateSection() {
 		},
 		onRender: ({ body, doc }) => {
 			try {
+				body.replaceChildren();
+				
 				let state = _sectionState;
-				let autoChecked = _getAutoTranslate() ? 'checked' : '';
+				let autoChecked = _getAutoTranslate();
 				let currentLang = Zotero.EnterScholar.Config.getTargetLanguage();
 				let langOptions = LANGUAGES.map(l =>
 					`<option value="${l.value}"${l.value === currentLang ? ' selected' : ''}>${l.label}</option>`
@@ -363,7 +375,7 @@ function _registerTranslateSection() {
 				
 				let contentHTML = '';
 				if (!state.original) {
-					contentHTML = `<div style="color:var(--fill-secondary);padding:8px 0;font-size:13px">在阅读器中选中文本即可翻译</div>`;
+					contentHTML = '<div style="color:var(--fill-secondary);padding:8px 0;font-size:13px">在阅读器中选中文本即可翻译</div>';
 				}
 				else {
 					let transStyle = '';
@@ -391,19 +403,18 @@ function _registerTranslateSection() {
 					`;
 				}
 				
-				body.innerHTML = `
-					<div xmlns="http://www.w3.org/1999/xhtml" style="display:flex;align-items:center;gap:8px;padding:4px 0;flex-wrap:wrap">
-						<label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;white-space:nowrap">
-							<input type="checkbox" id="es-auto-check" ${autoChecked} style="margin:0;cursor:pointer"/>
-							<span>自动翻译</span>
-						</label>
-						<div style="flex:1"></div>
-						<select id="es-lang-select" style="font-size:12px;padding:2px 4px;border:1px solid var(--fill-quinary);border-radius:4px;background:var(--material-background,transparent);color:var(--fill-primary);cursor:pointer">
-							${langOptions}
-						</select>
-					</div>
-					${contentHTML}
-				`;
+				let html = `<div style="display:flex;align-items:center;gap:8px;padding:4px 0;flex-wrap:wrap">
+					<label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;white-space:nowrap">
+						<input type="checkbox" id="es-auto-check" ${autoChecked ? 'checked' : ''} style="margin:0;cursor:pointer">
+						<span>自动翻译</span>
+					</label>
+					<div style="flex:1"></div>
+					<select id="es-lang-select" style="font-size:12px;padding:2px 4px;border:1px solid var(--fill-quinary);border-radius:4px;background:var(--material-background,transparent);color:var(--fill-primary);cursor:pointer">
+						${langOptions}
+					</select>
+				</div>${contentHTML}`;
+				
+				_injectHTML(body, doc, html);
 				
 				let autoCheck = body.querySelector('#es-auto-check');
 				if (autoCheck) {
@@ -484,6 +495,14 @@ function _updateTranslateSection(text, autoTranslate) {
 }
 
 // ── Helpers ──
+
+function _injectHTML(body, doc, html) {
+	let parser = new (doc.defaultView || globalThis).DOMParser();
+	let parsed = parser.parseFromString(`<!DOCTYPE html><html><body>${html}</body></html>`, 'text/html');
+	for (let child of [...parsed.body.childNodes]) {
+		body.appendChild(doc.adoptNode(child));
+	}
+}
 
 function _escapeHTML(str) {
 	return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');

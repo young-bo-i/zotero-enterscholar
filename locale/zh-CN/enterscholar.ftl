@@ -12,10 +12,13 @@ enterscholar-check-usage =
 
 enterscholar-translate-section = 翻译设置
 enterscholar-target-language = 目标语言
-enterscholar-enable-reader-popup = 在阅读器选中文本弹窗中显示翻译
-enterscholar-enable-context-menu = 在右键菜单中显示翻译选项
+enterscholar-enable-reader-popup =
+    .label = 在阅读器选中文本弹窗中显示翻译
+enterscholar-enable-context-menu =
+    .label = 在右键菜单中显示翻译选项
 
-enterscholar-auto-translate = 划词自动翻译
+enterscholar-auto-translate =
+    .label = 划词自动翻译
 
 enterscholar-show-advanced = ▶ 显示高级设置
 enterscholar-hide-advanced = ▼ 收起高级设置
@@ -36,7 +39,8 @@ enterscholar-api-key = API 密钥
 enterscholar-model = 模型
 
 enterscholar-advanced-translate-section = 高级翻译设置
-enterscholar-use-stream = 启用流式输出（逐字显示翻译结果）
+enterscholar-use-stream =
+    .label = 启用流式输出（逐字显示翻译结果）
 enterscholar-max-tokens = 最大 Token 数
 enterscholar-system-prompt = 自定义系统提示词
 

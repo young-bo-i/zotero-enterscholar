@@ -12,10 +12,13 @@ enterscholar-check-usage =
 
 enterscholar-translate-section = Translation Settings
 enterscholar-target-language = Target Language
-enterscholar-enable-reader-popup = Show translation in reader text selection popup
-enterscholar-enable-context-menu = Show translation option in context menus
+enterscholar-enable-reader-popup =
+    .label = Show translation in reader text selection popup
+enterscholar-enable-context-menu =
+    .label = Show translation option in context menus
 
-enterscholar-auto-translate = Auto-translate on selection
+enterscholar-auto-translate =
+    .label = Auto-translate on selection
 
 enterscholar-show-advanced = ▶ Show Advanced Settings
 enterscholar-hide-advanced = ▼ Hide Advanced Settings
@@ -36,7 +39,8 @@ enterscholar-api-key = API Key
 enterscholar-model = Model
 
 enterscholar-advanced-translate-section = Advanced Translation
-enterscholar-use-stream = Enable streaming output (show translation progressively)
+enterscholar-use-stream =
+    .label = Enable streaming output (show translation progressively)
 enterscholar-max-tokens = Max Tokens
 enterscholar-system-prompt = Custom System Prompt
 
