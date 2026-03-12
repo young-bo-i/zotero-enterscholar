@@ -307,11 +307,11 @@ function _registerTranslateSection() {
 		pluginID: PLUGIN_ID,
 		header: {
 			l10nID: 'enterscholar-section-header',
-			icon: rootURI + 'content/icons/icon.svg',
+			icon: rootURI + 'content/icons/icon-header.svg',
 		},
 		sidenav: {
 			l10nID: 'enterscholar-section-sidenav',
-			icon: rootURI + 'content/icons/icon.svg',
+			icon: rootURI + 'content/icons/icon-sidenav.svg',
 		},
 		sectionButtons: [
 			{
