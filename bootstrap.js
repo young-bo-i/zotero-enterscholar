@@ -111,16 +111,18 @@ function _registerReaderPopup() {
 		container.appendChild(content);
 		append(container);
 		
-	Zotero.EnterScholar.Translate.translate(text, (partial, done) => {
-		content.textContent = partial || '翻译中…';
-		if (done) {
-			content.style.color = '';
-		}
-	}).catch((e) => {
-		Zotero.logError(e);
-		content.textContent = _getUserFriendlyError(e.message);
-		content.style.color = 'var(--accent-red)';
-	});
+		_tryExpandPopup(container);
+		
+		Zotero.EnterScholar.Translate.translate(text, (partial, done) => {
+			content.textContent = partial || '翻译中…';
+			if (done) {
+				content.style.color = '';
+			}
+		}).catch((e) => {
+			Zotero.logError(e);
+			content.textContent = _getUserFriendlyError(e.message);
+			content.style.color = 'var(--accent-red)';
+		});
 	}, PLUGIN_ID);
 }
 
@@ -230,6 +232,32 @@ function _registerMainMenus() {
 			},
 		],
 	});
+}
+
+function _tryExpandPopup(container) {
+	try {
+		let popup = container.parentElement;
+		if (!popup) return;
+		let walk = popup;
+		for (let i = 0; i < 5 && walk; i++) {
+			let style = walk.style;
+			if (style) {
+				let computed = walk.ownerDocument.defaultView.getComputedStyle(walk);
+				let currentWidth = parseInt(computed.width) || 0;
+				let currentMaxWidth = parseInt(computed.maxWidth) || 0;
+				if (currentWidth > 0 && currentWidth < 420) {
+					style.width = '420px';
+				}
+				if (currentMaxWidth > 0 && currentMaxWidth < 420) {
+					style.maxWidth = '420px';
+				}
+			}
+			walk = walk.parentElement;
+		}
+	}
+	catch (e) {
+		Zotero.debug('EnterScholar: Could not expand popup: ' + e.message);
+	}
 }
 
 function _getUserFriendlyError(msg) {
