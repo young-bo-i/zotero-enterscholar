@@ -47,3 +47,9 @@ enterscholar-translate-menu-label =
     .label = EnterScholar
 
 enterscholar-auth-window-title = EnterScholar Login
+
+enterscholar-section-header = EnterScholar Translate
+enterscholar-section-sidenav =
+    .tooltiptext = EnterScholar Translate
+enterscholar-section-copy =
+    .tooltiptext = Copy Translation

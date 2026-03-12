@@ -47,3 +47,9 @@ enterscholar-translate-menu-label =
     .label = 恩特学术
 
 enterscholar-auth-window-title = 恩特学术登录
+
+enterscholar-section-header = 恩特学术翻译
+enterscholar-section-sidenav =
+    .tooltiptext = 恩特学术翻译
+enterscholar-section-copy =
+    .tooltiptext = 复制译文
