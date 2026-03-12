@@ -361,29 +361,29 @@ function _registerTranslateSection() {
 			let state = _sectionState;
 			
 			if (!state.original) {
-				let hint = doc.createElement('div');
+				let hint = _html(doc, 'div');
 				hint.textContent = '在阅读器中选中文本即可翻译';
 				hint.style.cssText = 'color: var(--fill-secondary); padding: 8px 0; font-size: 13px;';
 				body.appendChild(hint);
 				return;
 			}
 			
-			let origLabel = doc.createElement('div');
+			let origLabel = _html(doc, 'div');
 			origLabel.textContent = '原文';
 			origLabel.style.cssText = 'font-size: 11px; color: var(--fill-secondary); margin-bottom: 4px; margin-top: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;';
 			body.appendChild(origLabel);
 			
-			let origBox = doc.createElement('div');
+			let origBox = _html(doc, 'div');
 			origBox.textContent = state.original;
 			origBox.style.cssText = 'font-size: 13px; line-height: 1.6; padding: 8px 10px; background: var(--material-mix-quinary); border-radius: 6px; margin-bottom: 12px; max-height: 150px; overflow-y: auto; white-space: pre-wrap; word-break: break-word; user-select: text;';
 			body.appendChild(origBox);
 			
-			let transLabel = doc.createElement('div');
+			let transLabel = _html(doc, 'div');
 			transLabel.textContent = '译文';
 			transLabel.style.cssText = 'font-size: 11px; color: var(--fill-secondary); margin-bottom: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;';
 			body.appendChild(transLabel);
 			
-			let transBox = doc.createElement('div');
+			let transBox = _html(doc, 'div');
 			transBox.id = 'es-section-translation';
 			transBox.style.cssText = 'font-size: 13px; line-height: 1.6; padding: 8px 10px; border-radius: 6px; max-height: 300px; overflow-y: auto; white-space: pre-wrap; word-break: break-word; user-select: text;';
 			
@@ -448,13 +448,17 @@ function _registerTranslateSection() {
 	});
 }
 
+function _html(doc, tag) {
+	return doc.createElementNS('http://www.w3.org/1999/xhtml', tag);
+}
+
 function _buildSectionControls(doc) {
-	let bar = doc.createElement('div');
+	let bar = _html(doc, 'div');
 	bar.style.cssText = 'display: flex; align-items: center; gap: 8px; padding: 4px 0; flex-wrap: wrap;';
 	
-	let autoLabel = doc.createElement('label');
+	let autoLabel = _html(doc, 'label');
 	autoLabel.style.cssText = 'display: flex; align-items: center; gap: 4px; font-size: 12px; cursor: pointer; white-space: nowrap;';
-	let autoCheck = doc.createElement('input');
+	let autoCheck = _html(doc, 'input');
 	autoCheck.type = 'checkbox';
 	autoCheck.checked = _getAutoTranslate();
 	autoCheck.style.cssText = 'margin: 0; cursor: pointer;';
@@ -462,20 +466,20 @@ function _buildSectionControls(doc) {
 		Zotero.Prefs.set('extensions.enterscholar.autoTranslate', autoCheck.checked, true);
 	});
 	autoLabel.appendChild(autoCheck);
-	let autoText = doc.createElement('span');
+	let autoText = _html(doc, 'span');
 	autoText.textContent = '自动翻译';
 	autoLabel.appendChild(autoText);
 	bar.appendChild(autoLabel);
 	
-	let spacer = doc.createElement('div');
+	let spacer = _html(doc, 'div');
 	spacer.style.cssText = 'flex: 1;';
 	bar.appendChild(spacer);
 	
-	let langSelect = doc.createElement('select');
+	let langSelect = _html(doc, 'select');
 	langSelect.style.cssText = 'font-size: 12px; padding: 2px 4px; border: 1px solid var(--fill-quinary); border-radius: 4px; background: var(--material-background, transparent); color: var(--fill-primary); cursor: pointer;';
 	let currentLang = Zotero.EnterScholar.Config.getTargetLanguage();
 	for (let lang of LANGUAGES) {
-		let opt = doc.createElement('option');
+		let opt = _html(doc, 'option');
 		opt.value = lang.value;
 		opt.textContent = lang.label;
 		if (lang.value === currentLang) opt.selected = true;
