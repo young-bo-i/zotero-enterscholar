@@ -99,7 +99,7 @@ function _registerReaderPopup() {
 				'cursor: pointer',
 			].join(';');
 			btn.addEventListener('click', () => {
-				Zotero.getMainWindow().openPreferences('enterscholar-preferences');
+				Zotero.Utilities.Internal.openPreferences('enterscholar-preferences');
 			});
 			container.appendChild(btn);
 			append(container);
