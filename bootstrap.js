@@ -24,6 +24,7 @@ var LANGUAGES = [
 	{ value: 'ar', label: 'العربية' },
 ];
 
+
 function _getAutoTranslate() {
 	return Zotero.Prefs.get('extensions.enterscholar.autoTranslate', true);
 }
@@ -429,11 +430,112 @@ function _renderSectionBody(body, doc) {
 			root.append(transText);
 		}
 		
+		root.setAttribute('data-es-rendered', '1');
 		body.append(root);
-		Zotero.warn('[EnterScholar] _renderSectionBody done, children=' + body.childNodes.length);
 	}
 	catch (e) {
 		Zotero.logError('[EnterScholar] _renderSectionBody error: ' + e);
+	}
+}
+
+function _findConnectedBody(hookBody) {
+	if (hookBody && hookBody.isConnected) return hookBody;
+	
+	if (!_ensureRenderedPaneID) return null;
+	let win = Zotero.getMainWindow();
+	if (!win) return null;
+	let sections = win.document.querySelectorAll(
+		`item-pane-custom-section[data-pane="${CSS.escape(_ensureRenderedPaneID)}"]`
+	);
+	for (let s of sections) {
+		let body = s.querySelector('collapsible-section [data-type="body"]');
+		if (body && body.isConnected) return body;
+	}
+	return null;
+}
+
+var _ensureRenderedPaneID = null;
+
+function _scheduleEnsureRendered(win, paneID) {
+	_ensureRenderedPaneID = paneID;
+	let attempts = 0;
+	let maxAttempts = 20;
+	
+	function tryRender() {
+		attempts++;
+		try {
+			let doc = win.document;
+			let sections = doc.querySelectorAll(
+				`item-pane-custom-section[data-pane="${CSS.escape(paneID)}"]`
+			);
+			
+			for (let s of sections) {
+				let cs = s.querySelector('collapsible-section');
+				if (!cs) continue;
+				
+				let body = cs.querySelector('[data-type="body"]');
+				if (!body) {
+					Zotero.warn('[EnterScholar] ensureRendered #' + attempts
+						+ ': section found but no body yet');
+					continue;
+				}
+				
+				if (!body.isConnected) continue;
+				
+				_forceOpenSection(cs);
+				
+				if (!body.querySelector('[data-es-rendered]')) {
+					_renderSectionBody(body, doc);
+					let root = body.firstElementChild;
+					if (root) root.setAttribute('data-es-rendered', '1');
+					Zotero.warn('[EnterScholar] ensureRendered #' + attempts
+						+ ': rendered into connected body, children=' + body.childNodes.length);
+				}
+			}
+			
+			let allRendered = true;
+			for (let s of sections) {
+				let cs = s.querySelector('collapsible-section');
+				let body = cs?.querySelector('[data-type="body"]');
+				if (!body?.isConnected || !body.querySelector('[data-es-rendered]')) {
+					allRendered = false;
+					break;
+				}
+			}
+			
+			if (!allRendered && attempts < maxAttempts) {
+				win.setTimeout(tryRender, attempts < 5 ? 200 : 1000);
+			}
+			else {
+				Zotero.warn('[EnterScholar] ensureRendered: done after ' + attempts
+					+ ' attempts, allRendered=' + allRendered);
+			}
+		}
+		catch (e) {
+			Zotero.warn('[EnterScholar] ensureRendered error: ' + e);
+			if (attempts < maxAttempts) {
+				win.setTimeout(tryRender, 1000);
+			}
+		}
+	}
+	
+	win.setTimeout(tryRender, 500);
+}
+
+function _forceOpenSection(cs) {
+	if (!cs) return;
+	try {
+		if (cs.hasAttribute('empty')) {
+			cs.removeAttribute('empty');
+			Zotero.warn('[EnterScholar] Removed empty attribute');
+		}
+		if (!cs.hasAttribute('open')) {
+			cs.toggleAttribute('open', true);
+			Zotero.warn('[EnterScholar] Force set open attribute');
+		}
+	}
+	catch (e) {
+		Zotero.warn('[EnterScholar] _forceOpenSection error: ' + e);
 	}
 }
 
@@ -471,6 +573,10 @@ function _registerTranslateSection() {
 					_sectionState.loading = true;
 					_sectionState.autoTriggered = true;
 					if (_sectionRefresh) _sectionRefresh();
+					let actualBody = _findConnectedBody(null);
+					if (actualBody) {
+						_renderSectionBody(actualBody, actualBody.ownerDocument);
+					}
 				},
 			},
 			{
@@ -478,7 +584,8 @@ function _registerTranslateSection() {
 				icon: 'chrome://zotero/skin/16/universal/copy.svg',
 				l10nID: 'enterscholar-section-copy',
 				onClick: ({ body }) => {
-					let transEl = body.querySelector('[data-es-role="translation"]');
+					let actualBody = _findConnectedBody(body);
+					let transEl = actualBody?.querySelector('[data-es-role="translation"]');
 					let text = transEl?.textContent;
 					if (text && text !== '翻译中…' && text !== '选中文本后点击翻译按钮') {
 						let clipboard = Cc['@mozilla.org/widget/clipboardhelper;1']
@@ -489,49 +596,34 @@ function _registerTranslateSection() {
 			},
 		],
 		onInit: ({ body, doc, refresh }) => {
-			Zotero.warn('[EnterScholar] onInit called, body=' + body?.tagName);
 			_sectionRefresh = refresh;
-			
-			let cs = body?.closest('collapsible-section');
-			Zotero.warn('[EnterScholar] collapsible-section open=' + cs?.hasAttribute('open')
-				+ ', empty=' + cs?.hasAttribute('empty')
-				+ ', pane=' + cs?.dataset?.pane);
-			if (cs && !cs.hasAttribute('open')) {
-				cs.toggleAttribute('open', true);
-				Zotero.warn('[EnterScholar] Force opened collapsible-section');
-			}
-			if (cs && cs.hasAttribute('empty')) {
-				cs.removeAttribute('empty');
-				Zotero.warn('[EnterScholar] Removed empty attribute');
-			}
-			
-			_renderSectionBody(body, doc);
+			Zotero.warn('[EnterScholar] onInit body=' + body?.tagName);
 		},
 		onDestroy: () => {
 			_sectionRefresh = null;
 		},
 		onItemChange: ({ body, doc, setEnabled }) => {
-			Zotero.warn('[EnterScholar] onItemChange called, body=' + body?.tagName
-				+ ', bodyChildren=' + body?.childNodes?.length);
 			setEnabled(true);
-			_renderSectionBody(body, doc);
-			
-			let cs = body?.closest('collapsible-section');
-			if (cs && !cs.hasAttribute('open')) {
-				cs.toggleAttribute('open', true);
-				Zotero.warn('[EnterScholar] Force opened section in onItemChange');
-			}
 			return false;
 		},
 		onRender: ({ body, doc }) => {
-			Zotero.warn('[EnterScholar] onRender called');
-			_renderSectionBody(body, doc);
+			if (body && body.isConnected) {
+				Zotero.warn('[EnterScholar] onRender: body isConnected, rendering');
+				_forceOpenSection(body.parentElement);
+				_renderSectionBody(body, doc);
+			}
+			else {
+				Zotero.warn('[EnterScholar] onRender: body NOT connected, skipping');
+			}
 		},
 		onAsyncRender: async ({ body }) => {
 			let state = _sectionState;
 			if (!state.original || state.translated || state.error || !state.autoTriggered) return;
 			
-			let transBox = body.querySelector('[data-es-role="translation"]');
+			let actualBody = _findConnectedBody(body);
+			if (!actualBody) return;
+			
+			let transBox = actualBody.querySelector('[data-es-role="translation"]');
 			if (!transBox) return;
 			
 			let config = Zotero.EnterScholar.Config.getActiveConfig();
@@ -547,10 +639,11 @@ function _registerTranslateSection() {
 				let result = await Zotero.EnterScholar.Translate.translate(
 					state.original,
 					(partial, done) => {
-						if (transBox) {
-							transBox.textContent = partial || '翻译中…';
+						let tb = actualBody.querySelector('[data-es-role="translation"]');
+						if (tb) {
+							tb.textContent = partial || '翻译中…';
 							if (done) {
-								transBox.style.color = 'var(--fill-primary)';
+								tb.style.color = 'var(--fill-primary)';
 							}
 						}
 					}
@@ -562,14 +655,30 @@ function _registerTranslateSection() {
 				Zotero.logError(e);
 				state.error = _getUserFriendlyError(e.message);
 				state.loading = false;
-				if (transBox) {
-					transBox.textContent = state.error;
-					transBox.style.color = 'var(--accent-red)';
+				let tb = actualBody.querySelector('[data-es-role="translation"]');
+				if (tb) {
+					tb.textContent = state.error;
+					tb.style.color = 'var(--accent-red)';
 				}
 			}
 		},
 	});
 	Zotero.warn('[EnterScholar] registerSection result: ' + result);
+	
+	if (result) {
+		try {
+			Zotero.Prefs.set(`panes.${result}.open`, true);
+			Zotero.warn('[EnterScholar] Set pref panes.' + result + '.open = true');
+		}
+		catch (e) {
+			Zotero.warn('[EnterScholar] Could not set open pref: ' + e);
+		}
+		
+		let win = Zotero.getMainWindow();
+		if (win) {
+			_scheduleEnsureRendered(win, result);
+		}
+	}
 }
 
 function _updateTranslateSection(text, autoTranslate) {
@@ -581,8 +690,28 @@ function _updateTranslateSection(text, autoTranslate) {
 		error: '',
 		autoTriggered: autoTranslate,
 	};
+	
 	if (_sectionRefresh) {
 		_sectionRefresh();
+	}
+	
+	let win = Zotero.getMainWindow();
+	if (win && _ensureRenderedPaneID) {
+		win.setTimeout(() => {
+			try {
+				let doc = win.document;
+				let sections = doc.querySelectorAll(
+					`item-pane-custom-section[data-pane="${CSS.escape(_ensureRenderedPaneID)}"]`
+				);
+				for (let s of sections) {
+					let body = s.querySelector('collapsible-section [data-type="body"]');
+					if (body && body.isConnected) {
+						_renderSectionBody(body, doc);
+					}
+				}
+			}
+			catch (e) {}
+		}, 100);
 	}
 }
 
