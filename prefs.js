@@ -1,5 +1,5 @@
 pref("extensions.enterscholar.configSource", "forum_first");
-pref("extensions.enterscholar.forumURL", "http://localhost");
+pref("extensions.enterscholar.forumURL", "https://enterscholar.com");
 pref("extensions.enterscholar.bridgeEndpoint", "/zotero-bridge/v1/chat/completions");
 pref("extensions.enterscholar.usageEndpoint", "/zotero-bridge/usage");
 

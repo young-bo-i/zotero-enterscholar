@@ -59,7 +59,7 @@ Zotero.EnterScholar.Preferences = {
 		catch (e) {
 			Zotero.logError(e);
 			if (e.message !== '登录已取消') {
-				Services.prompt.alert(null, '恩特学术', e.message);
+				Services.prompt.alert(null, 'Translation of Enterscholar', e.message);
 			}
 		}
 		finally {

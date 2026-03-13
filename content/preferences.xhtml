@@ -82,39 +82,26 @@
 		
 		<!-- Advanced Settings (hidden by default) -->
 		<vbox id="enterscholar-advanced-section" hidden="true">
-			<!-- Forum URL -->
-			<groupbox>
-				<label><html:h2 data-l10n-id="enterscholar-connection-section"/></label>
-				
-				<hbox align="center">
-					<label data-l10n-id="enterscholar-forum-url" control="enterscholar-forum-url"
-						style="margin-inline-end: 8px;"/>
-					<html:input id="enterscholar-forum-url"
-						type="text"
-						preference="extensions.enterscholar.forumURL"
-						style="flex: 1;"
-						placeholder="http://localhost"/>
-				</hbox>
-			</groupbox>
+		<!-- Forum URL: hidden, hardcoded in config.js -->
 			
 			<!-- Config Source -->
 			<groupbox>
 				<label><html:h2 data-l10n-id="enterscholar-config-section"/></label>
 				
-				<hbox align="center">
-					<label data-l10n-id="enterscholar-config-source" control="enterscholar-config-source"
-						style="margin-inline-end: 8px;"/>
-					<menulist id="enterscholar-config-source"
-						preference="extensions.enterscholar.configSource"
-						native="true"
-						oncommand="Zotero.EnterScholar.Preferences.onConfigSourceChange()">
-						<menupopup>
-							<menuitem data-l10n-id="enterscholar-config-source-forum-first" value="forum_first"/>
-							<menuitem data-l10n-id="enterscholar-config-source-local" value="local"/>
-							<menuitem data-l10n-id="enterscholar-config-source-forum" value="forum"/>
-						</menupopup>
-					</menulist>
-				</hbox>
+			<hbox align="center">
+				<label data-l10n-id="enterscholar-config-source" control="enterscholar-config-source"
+					style="margin-inline-end: 8px;"/>
+				<menulist id="enterscholar-config-source"
+					preference="extensions.enterscholar.configSource"
+					native="true"
+					style="min-width: 220px;"
+					oncommand="Zotero.EnterScholar.Preferences.onConfigSourceChange()">
+					<menupopup>
+						<menuitem label="来自 Enterscholar" value="forum_first"/>
+						<menuitem label="自定义" value="local"/>
+					</menupopup>
+				</menulist>
+			</hbox>
 			</groupbox>
 			
 			<!-- Local LLM Config -->
@@ -136,11 +123,11 @@
 						</menupopup>
 					</menulist>
 					
-					<label data-l10n-id="enterscholar-endpoint" control="enterscholar-endpoint"/>
-					<html:input id="enterscholar-endpoint"
-						type="text"
-						preference="extensions.enterscholar.local.endpoint"
-						placeholder="https://api.openai.com/v1/chat/completions"/>
+				<label data-l10n-id="enterscholar-endpoint" control="enterscholar-endpoint"/>
+				<html:input id="enterscholar-endpoint"
+					type="text"
+					preference="extensions.enterscholar.local.endpoint"
+					placeholder="https://api.openai.com"/>
 					
 					<label data-l10n-id="enterscholar-api-key" control="enterscholar-api-key"/>
 					<html:input id="enterscholar-api-key"

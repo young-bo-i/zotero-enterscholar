@@ -1,4 +1,4 @@
-enterscholar-prefpane-title = EnterScholar
+enterscholar-prefpane-title = Translation of Enterscholar
 
 enterscholar-account-section = Account
 enterscholar-login-button =
@@ -32,9 +32,9 @@ enterscholar-config-source-forum-first = Forum First (fallback to local)
 enterscholar-config-source-local = Local Only
 enterscholar-config-source-forum = Forum Only
 
-enterscholar-local-config-section = Local LLM Settings
+enterscholar-local-config-section = Custom
 enterscholar-provider = Provider
-enterscholar-endpoint = API Endpoint
+enterscholar-endpoint = Base URL
 enterscholar-api-key = API Key
 enterscholar-model = Model
 
@@ -50,13 +50,13 @@ enterscholar-translating = Translating…
 enterscholar-translate-error = Translation failed: { $error }
 enterscholar-translate-no-config = No translation service configured. Please configure in Settings.
 enterscholar-translate-menu-label =
-    .label = EnterScholar
+    .label = Translation of Enterscholar
 
 enterscholar-auth-window-title = EnterScholar Login
 
-enterscholar-section-header = EnterScholar Translate
+enterscholar-section-header = Translation of Enterscholar
 enterscholar-section-sidenav =
-    .tooltiptext = EnterScholar Translate
+    .tooltiptext = Translation of Enterscholar
 enterscholar-section-copy =
     .tooltiptext = Copy Translation
 enterscholar-section-translate =

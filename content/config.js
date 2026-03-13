@@ -14,7 +14,7 @@ Zotero.EnterScholar.Config = {
 	},
 	
 	getForumURL() {
-		return Zotero.Prefs.get('extensions.enterscholar.forumURL', true) || 'http://localhost';
+		return 'https://enterscholar.com';
 	},
 	
 	getBridgeURL() {
@@ -66,15 +66,32 @@ Zotero.EnterScholar.Config = {
 		};
 	},
 	
+	_buildLocalEndpoint(baseURL, provider) {
+		let url = baseURL.replace(/\/+$/, '');
+		if (/\/v\d+\//.test(url) || url.endsWith('/completions')) {
+			return url;
+		}
+		provider = (provider || '').toLowerCase();
+		if (provider === 'anthropic') {
+			return url + '/v1/messages';
+		}
+		if (provider === 'gemini') {
+			return url + '/v1/chat/completions';
+		}
+		return url + '/v1/chat/completions';
+	},
+	
 	getLocalConfig() {
-		let endpoint = Zotero.Prefs.get('extensions.enterscholar.local.endpoint', true) || '';
+		let baseURL = Zotero.Prefs.get('extensions.enterscholar.local.endpoint', true) || '';
 		let apiKey = Zotero.Prefs.get('extensions.enterscholar.local.apiKey', true) || '';
 		let model = Zotero.Prefs.get('extensions.enterscholar.local.model', true) || '';
 		let provider = Zotero.Prefs.get('extensions.enterscholar.local.provider', true) || '';
 		
-		if (!endpoint || !apiKey) {
+		if (!baseURL || !apiKey) {
 			return null;
 		}
+		
+		let endpoint = this._buildLocalEndpoint(baseURL, provider);
 		
 		return {
 			mode: 'local',
@@ -117,7 +134,7 @@ Zotero.EnterScholar.Config = {
 		
 		let apiKey = Zotero.EnterScholar.Auth.userApiKey;
 		if (!apiKey) {
-			throw new Error('请先登录恩特学术账号');
+			throw new Error('请先登录 Enterscholar 账号');
 		}
 		
 		let url = this.getUsageURL();

@@ -1,8 +1,8 @@
-enterscholar-prefpane-title = 恩特学术
+enterscholar-prefpane-title = Translation of Enterscholar
 
 enterscholar-account-section = 账号
 enterscholar-login-button =
-    .label = 登录恩特学术
+    .label = 登录 Enterscholar
 enterscholar-logout-button =
     .label = 退出登录
 enterscholar-logged-in-as = 已登录：{ $username }
@@ -32,9 +32,9 @@ enterscholar-config-source-forum-first = 论坛优先（失败回退本地）
 enterscholar-config-source-local = 仅本地
 enterscholar-config-source-forum = 仅论坛
 
-enterscholar-local-config-section = 本地大模型设置
+enterscholar-local-config-section = 自定义
 enterscholar-provider = 服务商
-enterscholar-endpoint = API 端点
+enterscholar-endpoint = Base URL
 enterscholar-api-key = API 密钥
 enterscholar-model = 模型
 
@@ -50,13 +50,13 @@ enterscholar-translating = 翻译中…
 enterscholar-translate-error = 翻译失败：{ $error }
 enterscholar-translate-no-config = 未配置翻译服务，请在设置中配置。
 enterscholar-translate-menu-label =
-    .label = 恩特学术
+    .label = Translation of Enterscholar
 
-enterscholar-auth-window-title = 恩特学术登录
+enterscholar-auth-window-title = Enterscholar 登录
 
-enterscholar-section-header = 恩特学术翻译
+enterscholar-section-header = Translation of Enterscholar
 enterscholar-section-sidenav =
-    .tooltiptext = 恩特学术翻译
+    .tooltiptext = Translation of Enterscholar
 enterscholar-section-copy =
     .tooltiptext = 复制译文
 enterscholar-section-translate =
