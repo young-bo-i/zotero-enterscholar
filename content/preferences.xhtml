@@ -27,9 +27,16 @@
 						data-l10n-id="enterscholar-logout-button"
 						oncommand="Zotero.EnterScholar.Preferences.logout()"/>
 				</hbox>
-				<vbox id="enterscholar-usage-box" hidden="true">
-					<label id="enterscholar-usage-label"/>
-				</vbox>
+			<vbox id="enterscholar-usage-box" hidden="true">
+				<label id="enterscholar-usage-label"/>
+				<hbox id="enterscholar-quota-exhausted-box" hidden="true" align="center" style="margin-top: 4px;">
+					<label style="color: #f85149; font-size: 12px;" value="今日配额已用完"/>
+					<html:a id="enterscholar-apply-quota-link"
+						href="#"
+						onclick="Zotero.launchURL('https://enterscholar.com/'); return false;"
+						style="color: #388bfd; font-size: 12px; margin-inline-start: 6px; cursor: pointer; text-decoration: underline;">前往申请更多配额</html:a>
+				</hbox>
+			</vbox>
 			</vbox>
 		</groupbox>
 		

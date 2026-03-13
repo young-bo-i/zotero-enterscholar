@@ -40,8 +40,9 @@ Zotero.EnterScholar.Translate = {
 	},
 	
 	_getCacheKey(text, targetLanguage) {
-		let trimmed = text.trim().substring(0, 500);
-		return `${targetLanguage}:${trimmed}`;
+		let trimmed = text.trim();
+		let hash = Zotero.Utilities.Internal.md5(trimmed);
+		return `${targetLanguage}:${hash}`;
 	},
 	
 	_addToCache(key, value) {
@@ -233,7 +234,16 @@ Zotero.EnterScholar.Translate = {
 				reject(new Error('翻译服务暂不可用，请检查设置或联系管理员'));
 			}
 			else if (xhr.status === 429) {
-				reject(new Error('请求过于频繁，请稍后再试'));
+				let quotaMsg = '';
+				try {
+					let errData = JSON.parse(xhr.responseText);
+					if (errData.daily_quota !== undefined) {
+						quotaMsg = `今日翻译配额已用完（已用 ${errData.used_today || 0}/${errData.daily_quota}），`
+							+ '前往 Enterscholar 申请更多配额：https://enterscholar.com/';
+					}
+				}
+				catch (_) {}
+				reject(new Error(quotaMsg || '请求过于频繁，请稍后再试'));
 			}
 			else if (xhr.status >= 500) {
 				reject(new Error('翻译服务暂时出现问题，请稍后重试'));
@@ -270,7 +280,16 @@ Zotero.EnterScholar.Translate = {
 			throw new Error('翻译服务暂不可用，请检查设置或联系管理员');
 		}
 		if (e.status === 429) {
-			throw new Error('请求过于频繁，请稍后再试');
+			let quotaMsg = '';
+			try {
+				let errData = JSON.parse(e.responseText);
+				if (errData.daily_quota !== undefined) {
+					quotaMsg = `今日翻译配额已用完（已用 ${errData.used_today || 0}/${errData.daily_quota}），`
+						+ '前往 Enterscholar 申请更多配额：https://enterscholar.com/';
+				}
+			}
+			catch (_) {}
+			throw new Error(quotaMsg || '请求过于频繁，请稍后再试');
 		}
 		if (e.status >= 500) {
 			throw new Error('翻译服务暂时出现问题，请稍后重试');

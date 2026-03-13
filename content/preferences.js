@@ -83,29 +83,39 @@ Zotero.EnterScholar.Preferences = {
 		
 		let usageBox = document.getElementById('enterscholar-usage-box');
 		let usageLabel = document.getElementById('enterscholar-usage-label');
+		let exhaustedBox = document.getElementById('enterscholar-quota-exhausted-box');
 		
 		try {
 			let usage = await Zotero.EnterScholar.Config.fetchUsage(true);
 			
 			let parts = [];
+			let exhausted = false;
 			if (usage.daily_quota !== undefined) {
-				parts.push(`今日已用 ${usage.used_today || 0} / ${usage.daily_quota}`);
-				let remaining = usage.remaining ?? (usage.daily_quota - (usage.used_today || 0));
+				let usedToday = usage.used_today || 0;
+				let remaining = usage.remaining ?? (usage.daily_quota - usedToday);
+				parts.push(`今日已用 ${usedToday} / ${usage.daily_quota}`);
 				parts.push(`剩余 ${remaining}`);
+				exhausted = usage.daily_quota > 0 && remaining <= 0;
 			}
 			if (usage.trust_level !== undefined) {
-				parts.push(`等级 ${usage.trust_level}`);
+				parts.push(`TL${usage.trust_level}`);
 			}
 			if (parts.length === 0) {
 				parts.push('已获取额度信息');
 			}
 			usageLabel.value = parts.join('  ·  ');
 			usageBox.hidden = false;
+			if (exhaustedBox) {
+				exhaustedBox.hidden = !exhausted;
+			}
 		}
 		catch (e) {
 			Zotero.logError(e);
 			usageLabel.value = e.message || '暂时无法获取额度信息';
 			usageBox.hidden = false;
+			if (exhaustedBox) {
+				exhaustedBox.hidden = true;
+			}
 		}
 		finally {
 			btn.disabled = false;
