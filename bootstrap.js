@@ -43,6 +43,7 @@ async function startup({ id, version, rootURI: uri }) {
 	
 	Zotero.EnterScholar._rootURI = rootURI;
 	Zotero.EnterScholar._retranslate = _retranslate;
+	Zotero.EnterScholar._refreshAllSections = _refreshAllSections;
 	
 	await Zotero.EnterScholar.Config.init();
 	

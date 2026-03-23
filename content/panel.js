@@ -149,6 +149,10 @@
 			try {
 				await Zotero.EnterScholar.Auth.login();
 				this._syncLoginState();
+				try {
+					Zotero.EnterScholar._refreshAllSections();
+				}
+				catch (e) {}
 			}
 			catch (e) {
 				Zotero.logError('[EnterScholar] login error: ' + e);
