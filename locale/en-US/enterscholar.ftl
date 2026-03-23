@@ -54,10 +54,13 @@ enterscholar-translate-menu-label =
 
 enterscholar-auth-window-title = EnterScholar Login
 
-enterscholar-section-header = Translation of Enterscholar
+enterscholar-section-header =
+    .label = 恩特翻译
 enterscholar-section-sidenav =
-    .tooltiptext = Translation of Enterscholar
+    .tooltiptext = 恩特翻译
 enterscholar-section-copy =
     .tooltiptext = Copy Translation
 enterscholar-section-translate =
     .tooltiptext = Translate
+enterscholar-section-settings =
+    .tooltiptext = Open Settings

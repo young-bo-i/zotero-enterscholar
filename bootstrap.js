@@ -8,7 +8,7 @@ var _sectionState = {
 	error: '',
 	autoTriggered: false,
 };
-var _sectionInstances = [];
+var _sectionInstances = {};
 
 var LANGUAGES = [
 	{ value: 'zh-CN', label: '简体中文' },
@@ -41,6 +41,9 @@ async function startup({ id, version, rootURI: uri }) {
 	Services.scriptloader.loadSubScript(rootURI + 'content/auth.js');
 	Services.scriptloader.loadSubScript(rootURI + 'content/translate.js');
 	
+	Zotero.EnterScholar._rootURI = rootURI;
+	Zotero.EnterScholar._retranslate = _retranslate;
+	
 	await Zotero.EnterScholar.Config.init();
 	
 	await Promise.all([
@@ -52,6 +55,7 @@ async function startup({ id, version, rootURI: uri }) {
 	let win = Zotero.getMainWindow();
 	if (win) {
 		win.MozXULElement.insertFTLIfNeeded('enterscholar.ftl');
+		Services.scriptloader.loadSubScript(rootURI + 'content/panel.js', win);
 	}
 	
 	await Zotero.PreferencePanes.register({
@@ -66,8 +70,7 @@ async function startup({ id, version, rootURI: uri }) {
 		_registerReaderPopup();
 		_registerReaderContextMenu();
 		_registerMainMenus();
-		// TODO: 右侧面板自定义 section 暂时禁用，后续再修复
-		// _registerTranslateSection();
+		_registerTranslateSection();
 	}
 	catch (e) {
 		Zotero.logError('[EnterScholar] startup error: ' + e);
@@ -78,6 +81,9 @@ function shutdown({ id }) {}
 
 function onMainWindowLoad({ window }) {
 	window.MozXULElement.insertFTLIfNeeded('enterscholar.ftl');
+	if (rootURI) {
+		Services.scriptloader.loadSubScript(rootURI + 'content/panel.js', window);
+	}
 }
 
 function onMainWindowUnload({ window }) {}
@@ -377,113 +383,22 @@ function _registerMainMenus() {
 
 // ── Item pane translate section (right sidebar) ──
 
-function _renderSectionBody(body, doc) {
-	if (!body || !doc) return;
-	const XHTML_NS = 'http://www.w3.org/1999/xhtml';
-	function h(tag) { return doc.createElementNS(XHTML_NS, tag); }
-	
-	try {
-		let state = _sectionState;
-		let autoOn = false;
-		let currentLang = 'zh';
-		let langLabel = '中文';
-		try {
-			autoOn = _getAutoTranslate();
-			currentLang = Zotero.EnterScholar?.Config?.getTargetLanguage() || 'zh';
-			langLabel = LANGUAGES.find(l => l.value === currentLang)?.label || currentLang;
-		}
-		catch (e) {
-			Zotero.warn('[EnterScholar] _renderSectionBody config read error: ' + e);
-		}
-		
-		while (body.firstChild) body.firstChild.remove();
-		
-		let root = h('div');
-		root.style.cssText = 'padding:6px 10px;background:rgba(255,0,0,0.15);border:2px solid red;min-height:40px;';
-		
-		let statusBar = h('div');
-		statusBar.style.cssText = 'font-size:12px;color:var(--fill-secondary);margin-bottom:6px;display:flex;gap:12px;';
-		let autoLabel = h('span');
-		autoLabel.textContent = `划词自动翻译: ${autoOn ? '开' : '关'}`;
-		let langLabelEl = h('span');
-		langLabelEl.textContent = `目标语言: ${langLabel}`;
-		statusBar.append(autoLabel, langLabelEl);
-		root.append(statusBar);
-		
-		if (!state.original) {
-			let hint = h('div');
-			hint.textContent = '在阅读器中选中文本即可翻译';
-			hint.style.cssText = 'font-size:13px;color:var(--fill-tertiary);line-height:1.6;padding:4px 0;';
-			root.append(hint);
-		}
-		else {
-			let origLabel = h('div');
-			origLabel.textContent = '【原文】';
-			origLabel.style.cssText = 'font-size:11px;font-weight:600;color:var(--fill-secondary);margin-top:4px;';
-			root.append(origLabel);
-			
-			let origText = h('div');
-			origText.setAttribute('data-es-role', 'original');
-			origText.textContent = state.original;
-			origText.style.cssText = 'font-size:13px;line-height:1.6;white-space:pre-wrap;word-break:break-word;user-select:text;margin-bottom:8px;';
-			root.append(origText);
-			
-			let transLabel = h('div');
-			transLabel.textContent = '【译文】';
-			transLabel.style.cssText = 'font-size:11px;font-weight:600;color:var(--fill-secondary);';
-			root.append(transLabel);
-			
-			let transText = h('div');
-			transText.setAttribute('data-es-role', 'translation');
-			transText.style.cssText = 'font-size:13px;line-height:1.6;white-space:pre-wrap;word-break:break-word;user-select:text;padding:4px 0;';
-			if (state.error) {
-				transText.textContent = state.error;
-				transText.style.color = 'var(--accent-red)';
-			}
-			else if (state.translated) {
-				transText.textContent = state.translated;
-			}
-			else if (state.autoTriggered) {
-				transText.textContent = '翻译中…';
-				transText.style.color = 'var(--fill-secondary)';
-			}
-			else {
-				transText.textContent = '选中文本后点击翻译按钮';
-				transText.style.color = 'var(--fill-tertiary)';
-			}
-			root.append(transText);
-		}
-		
-		root.setAttribute('data-es-rendered', '1');
-		body.append(root);
-		Zotero.warn('[ES] _renderSectionBody done: root.children=' + root.childNodes.length
-			+ ', body.isConnected=' + body.isConnected
-			+ ', body.offsetHeight=' + body.offsetHeight);
-	}
-	catch (e) {
-		Zotero.logError('[EnterScholar] _renderSectionBody error: ' + e);
-	}
-}
-
-function _findConnectedBody(hookBody) {
-	if (hookBody && hookBody.isConnected) return hookBody;
-	for (let inst of _sectionInstances) {
-		if (inst.body && inst.body.isConnected) return inst.body;
-	}
-	return null;
-}
-
 function _refreshAllSections() {
-	for (let inst of _sectionInstances) {
-		if (inst.refresh) {
-			try { inst.refresh(); }
+	for (let uid of Object.keys(_sectionInstances)) {
+		let refresh = _sectionInstances[uid];
+		if (refresh) {
+			try { refresh(); }
 			catch (e) {}
 		}
 	}
 }
 
-var ICON_HEADER = "data:image/svg+xml," + encodeURIComponent('<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="5.5" cy="10.5" r="2.8" stroke="context-stroke" stroke-width="1.3"/><circle cx="11" cy="11" r="2.4" stroke="context-stroke" stroke-width="1.3"/><path d="M7.2 8.2C6.8 5.8 7.6 3.8 8.5 2.5" stroke="context-stroke" stroke-width="1.2" stroke-linecap="round"/><path d="M9.2 9C9.6 6.5 9.2 4.5 8.5 2.5" stroke="context-stroke" stroke-width="1.2" stroke-linecap="round"/><path d="M8.5 2.5C9.8 1.7 11.5 1.8 12.2 2.7" stroke="context-stroke" stroke-width="1.2" stroke-linecap="round"/></svg>');
-var ICON_SIDENAV = "data:image/svg+xml," + encodeURIComponent('<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="7" cy="13" r="3.2" stroke="context-stroke" stroke-width="1.4"/><circle cx="13.5" cy="13.5" r="2.8" stroke="context-stroke" stroke-width="1.4"/><path d="M9 10.5C8.5 7 9.5 4.5 10.5 3" stroke="context-stroke" stroke-width="1.3" stroke-linecap="round"/><path d="M11.5 11C12 8 11.5 5.5 10.5 3" stroke="context-stroke" stroke-width="1.3" stroke-linecap="round"/><path d="M10.5 3C12 2 14 2.2 15 3.2" stroke="context-stroke" stroke-width="1.3" stroke-linecap="round"/></svg>');
+function _getIconHeader() {
+	return rootURI + 'content/icons/icon-16.png';
+}
+function _getIconSidenav() {
+	return rootURI + 'content/icons/icon-20.png';
+}
 
 function _registerTranslateSection() {
 	if (!Zotero.ItemPaneManager) {
@@ -496,90 +411,57 @@ function _registerTranslateSection() {
 		pluginID: PLUGIN_ID,
 		header: {
 			l10nID: 'enterscholar-section-header',
-			icon: ICON_HEADER,
+			icon: _getIconHeader(),
 		},
 		sidenav: {
 			l10nID: 'enterscholar-section-sidenav',
-			icon: ICON_SIDENAV,
+			icon: _getIconSidenav(),
 		},
-		bodyXHTML: '',
+		bodyXHTML: '<enterscholar-panel />',
 		sectionButtons: [
 			{
-				type: 'translate',
-				icon: 'chrome://zotero/skin/16/universal/sync.svg',
-				l10nID: 'enterscholar-section-translate',
-				onClick: ({ body }) => {
-					if (!_sectionState.original) return;
-					_sectionState.translated = '';
-					_sectionState.error = '';
-					_sectionState.loading = true;
-					_sectionState.autoTriggered = true;
-					_refreshAllSections();
-				},
-			},
-			{
-				type: 'copy',
-				icon: 'chrome://zotero/skin/16/universal/copy.svg',
-				l10nID: 'enterscholar-section-copy',
-				onClick: ({ body }) => {
-					let actualBody = _findConnectedBody(body);
-					let transEl = actualBody?.querySelector('[data-es-role="translation"]');
-					let text = transEl?.textContent;
-					if (text && text !== '翻译中…' && text !== '选中文本后点击翻译按钮') {
-						let clipboard = Cc['@mozilla.org/widget/clipboardhelper;1']
-							.getService(Ci.nsIClipboardHelper);
-						clipboard.copyString(text);
-					}
+				type: 'settings',
+				icon: 'chrome://zotero/skin/16/universal/options.svg',
+				l10nID: 'enterscholar-section-settings',
+				onClick: () => {
+					Zotero.Utilities.Internal.openPreferences('enterscholar-preferences');
 				},
 			},
 		],
-	onInit: ({ body, refresh }) => {
-		let section = body?.closest('collapsible-section');
-		let details = body?.closest('item-details');
-		Zotero.warn('[ES] onInit: body=' + !!body
-			+ ', section.open=' + section?.hasAttribute('open')
-			+ ', section.empty=' + section?.hasAttribute('empty')
-			+ ', details.id=' + details?.id);
-		_sectionInstances.push({ body, refresh });
-		_renderSectionBody(body, body?.ownerDocument);
-		Zotero.warn('[ES] onInit: after render, body.childNodes=' + body?.childNodes?.length
-			+ ', body.innerHTML.length=' + body?.innerHTML?.length);
-	},
-	onDestroy: ({ body }) => {
-		Zotero.warn('[ES] onDestroy');
-		_sectionInstances = _sectionInstances.filter(inst => inst.body !== body);
-	},
-	onItemChange: ({ item, setEnabled }) => {
-		Zotero.warn('[ES] onItemChange: item=' + item?.id + ', title=' + item?.getField?.('title')?.substring(0, 30));
-		setEnabled(true);
-	},
-	onRender: ({ body, item }) => {
-		let section = body?.closest('collapsible-section');
-		let parent = body?.closest('item-pane-custom-section');
-		Zotero.warn('[ES] onRender: body=' + !!body
-			+ ', item=' + item?.id
-			+ ', section.open=' + section?.hasAttribute('open')
-			+ ', section.empty=' + section?.hasAttribute('empty')
-			+ ', parent.hidden=' + parent?.hidden);
-		_renderSectionBody(body, body?.ownerDocument);
-		Zotero.warn('[ES] onRender: after render, body.childNodes=' + body?.childNodes?.length
-			+ ', body.scrollHeight=' + body?.scrollHeight);
-	},
+		onInit: ({ body, refresh }) => {
+			let paneUID = Zotero.Utilities.randomString(8);
+			body.dataset.paneUid = paneUID;
+			_sectionInstances[paneUID] = refresh;
+		},
+		onDestroy: ({ body }) => {
+			let paneUID = body.dataset.paneUid;
+			if (paneUID) delete _sectionInstances[paneUID];
+		},
+		onItemChange: ({ body, item, setEnabled }) => {
+			setEnabled(true);
+			return true;
+		},
+		onRender: ({ body, item }) => {
+			let panel = body.querySelector('enterscholar-panel');
+			if (panel) {
+				panel.render(_sectionState);
+			}
+		},
 		onAsyncRender: async ({ body, item }) => {
 			let state = _sectionState;
 			if (!state.original || state.translated || state.error || !state.autoTriggered) return;
 			
-			let actualBody = _findConnectedBody(body);
-			if (!actualBody) return;
+			let panel = body.querySelector('enterscholar-panel');
+			if (!panel) return;
 			
-			let transBox = actualBody.querySelector('[data-es-role="translation"]');
-			if (!transBox) return;
+			let transEl = panel.getTranslationEl();
+			if (!transEl) return;
 			
 			let config = Zotero.EnterScholar.Config.getActiveConfig();
 			if (!config) {
 				state.error = '尚未配置翻译服务';
-				transBox.textContent = state.error;
-				transBox.style.color = 'var(--accent-red)';
+				state.loading = false;
+				panel.showNoConfig();
 				return;
 			}
 			
@@ -588,11 +470,10 @@ function _registerTranslateSection() {
 				let result = await Zotero.EnterScholar.Translate.translate(
 					state.original,
 					(partial, done) => {
-						let tb = actualBody.querySelector('[data-es-role="translation"]');
-						if (tb) {
-							tb.textContent = partial || '翻译中…';
+						if (transEl.isConnected) {
+							transEl.textContent = partial || '翻译中…';
 							if (done) {
-								tb.style.color = 'var(--fill-primary)';
+								transEl.className = 'es-text-box';
 							}
 						}
 					}
@@ -604,10 +485,9 @@ function _registerTranslateSection() {
 				Zotero.logError(e);
 				state.error = _getUserFriendlyError(e.message);
 				state.loading = false;
-				let tb = actualBody.querySelector('[data-es-role="translation"]');
-				if (tb) {
-					tb.textContent = state.error;
-					tb.style.color = 'var(--accent-red)';
+				if (transEl.isConnected) {
+					transEl.textContent = state.error;
+					transEl.className = 'es-text-box es-error';
 				}
 			}
 		},
@@ -617,12 +497,6 @@ function _registerTranslateSection() {
 			Zotero.Prefs.set(`panes.${result}.open`, true);
 		}
 		catch (e) {}
-		setTimeout(() => {
-			try {
-				Zotero.Notifier.trigger('refresh', 'itempane', [], {});
-			}
-			catch (e) {}
-		}, 500);
 	}
 }
 
@@ -634,6 +508,17 @@ function _updateTranslateSection(text, autoTranslate) {
 		loading: autoTranslate,
 		error: '',
 		autoTriggered: autoTranslate,
+	};
+	_refreshAllSections();
+}
+
+function _retranslate(text) {
+	_sectionState = {
+		original: text,
+		translated: '',
+		loading: true,
+		error: '',
+		autoTriggered: true,
 	};
 	_refreshAllSections();
 }
