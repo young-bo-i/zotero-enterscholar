@@ -6,6 +6,7 @@ if (typeof Zotero.EnterScholar === 'undefined') {
 
 Zotero.EnterScholar.Translate = {
 	_cache: new Map(),
+	_inflight: new Map(),
 	MAX_CACHE_SIZE: 200,
 	
 	LANGUAGE_NAMES: {
@@ -75,19 +76,34 @@ Zotero.EnterScholar.Translate = {
 			return cached;
 		}
 		
+		if (this._inflight.has(cacheKey)) {
+			let result = await this._inflight.get(cacheKey);
+			if (onChunk) onChunk(result, true);
+			return result;
+		}
+		
 		let useStream = !!onChunk && Zotero.EnterScholar.Config.getUseStream();
 		
-		let result;
-		if (useStream) {
-			result = await this._streamRequest(text, config, onChunk);
-		}
-		else {
-			result = await this._nonStreamRequest(text, config);
-			if (onChunk) onChunk(result, true);
-		}
+		let promise = (async () => {
+			let result;
+			if (useStream) {
+				result = await this._streamRequest(text, config, onChunk);
+			}
+			else {
+				result = await this._nonStreamRequest(text, config);
+				if (onChunk) onChunk(result, true);
+			}
+			this._addToCache(cacheKey, result);
+			return result;
+		})();
 		
-		this._addToCache(cacheKey, result);
-		return result;
+		this._inflight.set(cacheKey, promise);
+		try {
+			return await promise;
+		}
+		finally {
+			this._inflight.delete(cacheKey);
+		}
 	},
 	
 	_buildRequestHeaders(config) {
@@ -308,5 +324,6 @@ Zotero.EnterScholar.Translate = {
 	
 	clearCache() {
 		this._cache.clear();
+		this._inflight.clear();
 	},
 };

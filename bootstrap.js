@@ -332,6 +332,7 @@ function _registerMainMenus() {
 							try {
 								await Zotero.EnterScholar.Auth.login();
 								Zotero.EnterScholar.Config.clearCache();
+								_refreshAllSections();
 							}
 							catch (e) {
 								Zotero.logError(e);
@@ -351,6 +352,7 @@ function _registerMainMenus() {
 							await Zotero.EnterScholar.Auth.logout();
 							Zotero.EnterScholar.Config.clearCache();
 							Zotero.EnterScholar.Translate.clearCache();
+							_refreshAllSections();
 						},
 					},
 					{ menuType: 'separator' },

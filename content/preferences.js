@@ -55,6 +55,7 @@ Zotero.EnterScholar.Preferences = {
 			await Zotero.EnterScholar.Auth.login();
 			this.updateAccountUI();
 			Zotero.EnterScholar.Config.clearCache();
+			Zotero.EnterScholar._refreshAllSections();
 		}
 		catch (e) {
 			Zotero.logError(e);
@@ -72,6 +73,7 @@ Zotero.EnterScholar.Preferences = {
 		Zotero.EnterScholar.Config.clearCache();
 		Zotero.EnterScholar.Translate.clearCache();
 		this.updateAccountUI();
+		Zotero.EnterScholar._refreshAllSections();
 		
 		let usageBox = document.getElementById('enterscholar-usage-box');
 		usageBox.hidden = true;
